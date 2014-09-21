@@ -12,6 +12,7 @@ class Hackathon_PromoCodeMessages_Model_Observer
     public function validateCode(Varien_Event_Observer $observer)
     {
         $action = Mage::app()->getRequest()->getActionName();
+
         if ($action == 'couponPost') {
 
             if (Mage::app()->getRequest()->getParam('remove') == 1) {
