@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Hackathon_PromoCodeMessages>
+            <version>0.1.0</version>
+        </Hackathon_PromoCodeMessages>
+    </modules>
+    <global>
+        <models>
+            <hackathon_promocodemessages>
+                <class>Hackathon_PromoCodeMessages_Model</class>
+                <resourceModel>hackathon_promocodemessages_resource</resourceModel>
+            </hackathon_promocodemessages>
+            <hackathon_promocodemessages_resource>
+                <class>Hackathon_PromoCodeMessages_Model_Resource</class>
+            </hackathon_promocodemessages_resource>
+        </models>
+        <blocks>
+            <hackathon_promocodemessages>
+                <class>Hackathon_PromoCodeMessages_Block</class>
+            </hackathon_promocodemessages>
+        </blocks>
+        <helpers>
+            <hackathon_promocodemessages>
+                <class>Hackathon_PromoCodeMessages_Helper</class>
+            </hackathon_promocodemessages>
+        </helpers>
+    </global>
+</config>

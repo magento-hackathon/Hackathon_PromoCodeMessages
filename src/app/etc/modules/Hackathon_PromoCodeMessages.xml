@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Hackathon_PromoCodeMessages>
+            <active>true</active>
+            <codePool>local</codePool>
+            <depends>
+                <Mage_Checkout/>
+                <Mage_SalesRule/>
+
+            </depends>
+        </Hackathon_PromoCodeMessages>
+    </modules>
+</config>
