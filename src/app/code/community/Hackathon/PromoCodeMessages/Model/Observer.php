@@ -15,7 +15,7 @@ class Hackathon_PromoCodeMessages_Model_Observer
         if ($action == 'couponPost') {
 
             if (Mage::app()->getRequest()->getParam('remove') == 1) {
-                return;
+                return null;
             }
 
             $quote = $observer->getQuote();
@@ -26,7 +26,7 @@ class Hackathon_PromoCodeMessages_Model_Observer
                 // parent validation has failed
                 $couponCode = (string)$this->getRequest()->getParam('coupon_code');
                 $msg = Mage::getModel('hackathon_promocodemessages/validator')->validate($couponCode);
-                return $msg;
+                Mage::throwException($msg);
 
             }
         }
