@@ -37,7 +37,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         /** @var $rule Mage_SalesRule_Model_Rule */
         $rule = Mage::getModel('salesrule/rule')->load($coupon->getRuleId());
 
-        $this->_validateGeneral($rule);
+        $this->_validateGeneral($rule, $coupon);
         $this->_validateConditions($rule);
     }
 
@@ -62,14 +62,16 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
     /**
      * @param Mage_SalesRule_Model_Rule $rule
+     * @param Mage_SalesRule_Model_Coupon $coupon
      * @return string
      */
-    protected function _validateGeneral($rule)
+    protected function _validateGeneral($rule, $coupon)
     {
         if (!$rule->getIsActive()) {
             Mage::throwException($this->_formatMessage('Your coupon is inactive.'));
         }
 
+        // check websites
         $websiteIds = $rule->getWebsiteIds();
         if (!in_array($this->_getQuote()->getStore()->getWebsiteId(), $websiteIds)) {
             $websiteNames = Mage::getResourceModel('core/website_collection')
@@ -82,6 +84,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             ));
         }
 
+        // check customer groups
         $groupIds = $rule->getCustomerGroupIds();
         if (!in_array($this->_getQuote()->getCustomerGroupId(), $groupIds)) {
             $customerGroupNames = Mage::getResourceModel('customer/group_collection')
@@ -94,6 +97,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             ));
         }
 
+        // check from date
         $fromDate = new Zend_Date($rule->getFromDate());
         if (Zend_Date::now()->isEarlier($fromDate)) {
             Mage::throwException($this->_formatMessage(
@@ -103,6 +107,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             ));
         }
 
+        // check to date
         $toDate = new Zend_Date($rule->getToDate());
         if (Zend_Date::now()->isLater($toDate)) {
             Mage::throwException($this->_formatMessage(
@@ -110,6 +115,32 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 Mage::helper('core')->formatDate($toDate),
                 ''
             ));
+        }
+
+        // check global usage limit
+        if ($coupon->getUsageLimit() && $coupon->getTimesUsed() >= $coupon->getUsageLimit()) {
+            Mage::throwException($this->_formatMessage(
+                'Your coupon was already used.',
+                $coupon->getUsageLimit(),
+                'It may only be used %s time(s).'
+            ));
+        }
+
+        // check per customer usage limit
+        $customerId = $this->_getQuote()->getCustomerId();
+        if ($customerId && $coupon->getUsagePerCustomer()) {
+            $couponUsage = new Varien_Object();
+            Mage::getResourceModel('salesrule/coupon_usage')->loadByCustomerCoupon(
+                $couponUsage, $customerId, $coupon->getId());
+            if ($couponUsage->getCouponId() &&
+                $couponUsage->getTimesUsed() >= $coupon->getUsagePerCustomer()
+            ) {
+                Mage::throwException($this->_formatMessage(
+                    'You have already used your coupon.',
+                    $coupon->getUsagePerCustomer(),
+                    'It may only be used %s time(s) per customer.'
+                ));
+            }
         }
     }
 
