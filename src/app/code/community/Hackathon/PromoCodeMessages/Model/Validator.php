@@ -11,7 +11,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     {
 
         try {
-            $coupon = Mage::getModel('salesrule/coupon')->loadbyCode($couponCode);
+            $coupon = Mage::getModel('salesrule/coupon')->load($couponCode, 'code');
             // no coupon
             if (!$coupon->getId())
             {
@@ -26,6 +26,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         catch (Exception $e)
         {
+            Mage::logException($e);
             Mage::throwException('exception'); // TODO: put more descriptive message here
         }
         return "invalid";
