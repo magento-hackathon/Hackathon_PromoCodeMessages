@@ -3,11 +3,10 @@
     <modules>
         <Hackathon_PromoCodeMessages>
             <active>true</active>
-            <codePool>local</codePool>
+            <codePool>community</codePool>
             <depends>
                 <Mage_Checkout/>
                 <Mage_SalesRule/>
-
             </depends>
         </Hackathon_PromoCodeMessages>
     </modules>

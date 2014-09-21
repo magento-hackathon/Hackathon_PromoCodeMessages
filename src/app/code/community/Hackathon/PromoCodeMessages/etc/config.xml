@@ -32,6 +32,7 @@
             <sales_quote_collect_totals_after>
                 <observers>
                     <hackathon_promocodemessages>
+                        <type>singleton</type>
                         <class>hackathon_promocodemessages/observer</class>
                         <method>validateCode</method>
                     </hackathon_promocodemessages>
