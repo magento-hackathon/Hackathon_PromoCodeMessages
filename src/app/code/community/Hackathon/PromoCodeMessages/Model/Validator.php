@@ -84,6 +84,24 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 'Allowed Customer Groups: %s.'
             ));
         }
+        
+        $fromDate = new Zend_Date($rule->getFromDate());
+        if (Zend_Date::now()->isEarlier($fromDate)) {
+            Mage::throwException($this->_formatMessage(
+                'Your coupon is not valid yet. It will get active on %s.',
+                Mage::helper('core')->formatDate($fromDate),
+                ''
+            ));
+        }
+
+        $toDate = new Zend_Date($rule->getToDate());
+        if (Zend_Date::now()->isLater($toDate)) {
+            Mage::throwException($this->_formatMessage(
+                'Your coupon is not valid any more. It expired on %s.',
+                Mage::helper('core')->formatDate($toDate),
+                ''
+            ));
+        }
     }
     
     /**
