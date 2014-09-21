@@ -26,4 +26,17 @@
             </hackathon_promocodemessages>
         </helpers>
     </global>
+
+    <frontend>
+        <events>
+            <sales_quote_collect_totals_after>
+                <observers>
+                    <hackathon_promocodemessages>
+                        <class>hackathon_promocodemessages/observer</class>
+                        <method>validateCode</method>
+                    </hackathon_promocodemessages>
+                </observers>
+            </sales_quote_collect_totals_after>
+        </events>
+    </frontend>
 </config>
