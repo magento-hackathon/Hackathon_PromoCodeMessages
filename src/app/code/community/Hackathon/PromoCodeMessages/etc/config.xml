@@ -44,7 +44,7 @@
     <default>
         <checkout>
             <promocodemessages>
-                <use_internal_message_on_frontend>0</use_internal_message_on_frontend>
+                <add_additional_info_on_frontend>0</add_additional_info_on_frontend>
             </promocodemessages>
         </checkout>
     </default>

@@ -38,16 +38,17 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * Tranlsate the message
      * 
      * @param string $message
-     * @param array $params
+     * @param string $params
      * @param string $internalMessage
      * @return string
      */
-    protected function _formatMessage($message, $params = array(), $internalMessage = null)
+    protected function _formatMessage($message, $params = '', $internalMessage = null)
     {
-        if (!is_null($internalMessage) && Mage::getStoreConfigFlag('checkout/promocodemessages/use_internal_message_on_frontend')) {
-            return Mage::helper('hackathon_promocodemessages')->__($internalMessage, $params);
+        $message = Mage::helper('hackathon_promocodemessages')->__($message, $params);
+        if (!is_null($internalMessage) && Mage::getStoreConfigFlag('checkout/promocodemessages/add_additional_info_on_frontend')) {
+            $message .= '<br />' . Mage::helper('hackathon_promocodemessages')->__($internalMessage, $params);
         }
-        return Mage::helper('hackathon_promocodemessages')->__($message, $params);
+        return $message;
     }
 
     /**
@@ -57,10 +58,32 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _validateGeneral($rule)
     {
         if (!$rule->getIsActive()) {
-            Mage::throwException($this->_formatMessage('Code is inactive'));
+            Mage::throwException($this->_formatMessage('Your coupon is inactive.'));
         }
         
+        $websiteIds = $rule->getWebsiteIds();
+        if (!in_array($this->_getQuote()->getStore()->getWebsiteId(), $websiteIds)) {
+            $websiteNames = Mage::getResourceModel('core/website_collection')
+                ->addFieldToFilter('website_id', array('in' => $websiteIds))
+                ->getColumnValues('name');
+            Mage::throwException($this->_formatMessage(
+                'Your coupon is not valid for this store.',
+                implode(', ', $websiteNames),
+                'Allowed Websites: %s.'
+            ));
+        }
         
+        $groupIds = $rule->getCustomerGroupIds();
+        if (!in_array($this->_getQuote()->getCustomerGroupId(), $groupIds)) {
+            $customerGroupNames = Mage::getResourceModel('customer/group_collection')
+                ->addFieldToFilter('customer_group_id', array('in' => $groupIds))
+                ->getColumnValues('customer_group_code');
+            Mage::throwException($this->_formatMessage(
+                'Your coupon is not valid for your Customer Group',
+                implode(', ', $customerGroupNames),
+                'Allowed Customer Groups: %s.'
+            ));
+        }
     }
     
     /**
