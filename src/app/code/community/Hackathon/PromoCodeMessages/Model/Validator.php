@@ -11,30 +11,51 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     {
 
         try {
+            /** @var Mage_SalesRule_Model_Coupon $coupon */
             $coupon = Mage::getModel('salesrule/coupon')->load($couponCode, 'code');
-            // no coupon
-            if (!$coupon->getId())
-            {
-                return $this->_formatMessage('Code does not exist.');
-            }
-
-            $rule = Mage::getModel('salesrule/rule')->load($coupon->getRuleId());
-            if (!$rule->getIsActive()) {
-                return $this->_formatMessage('Code is inactive');
-            }
-        }
-
-        catch (Exception $e)
-        {
+        } catch (Exception $e) {
             Mage::logException($e);
-            Mage::throwException('exception'); // TODO: put more descriptive message here
+            return;
         }
-        return "invalid";
+        
+        // no coupon
+        if (!$coupon->getId()) {
+            Mage::throwException($this->_formatMessage('Code does not exist.'));
+        }
+
+        /** @var $rule Mage_SalesRule_Model_Rule */
+        $rule = Mage::getModel('salesrule/rule')->load($coupon->getRuleId());
+        $this->_validateGeneral($rule);
+        $this->_validateConditions($rule);
     }
 
-
-    protected function _formatMessage($msg)
+    /**
+     * Tranlsate the message
+     * 
+     * @param string $message
+     * @return string
+     */
+    protected function _formatMessage($message)
     {
-        return Mage::helper('hackathon_promocodemessages')->__($msg);
+        return Mage::helper('hackathon_promocodemessages')->__($message);
+    }
+
+    /**
+     * @param Mage_SalesRule_Model_Rule $rule
+     * @return string
+     */
+    protected function _validateGeneral($rule)
+    {
+        if (!$rule->getIsActive()) {
+            Mage::throwException($this->_formatMessage('Code is inactive'));
+        }
+    }
+    
+    /**
+     * @param Mage_SalesRule_Model_Rule $rule
+     * @return string
+     */
+    protected function _validateConditions($rule)
+    {
     }
 }
