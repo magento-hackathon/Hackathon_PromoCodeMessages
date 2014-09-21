@@ -1,0 +1,49 @@
+{
+    "name": "hackathon/promocodemessages",
+    "license": "GPL-3.0",
+    "type": "magento-module",
+    "description": "Improves error messages when entering promo codes in the cart",
+    "homepage": "https://github.com/MeetMagentoNY/Hackathon_PromoCodeMessages",
+    "authors": [
+        {
+            "name": "Laura Folco",
+            "email": "me@laurafolco.com"
+        },
+        {
+            "name": "Andreas von Studnitz",
+            "email": "avs@integer-net.de"
+        }
+    ],
+    "require": {
+        "magento-hackathon/magento-composer-installer": "*"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://packages.firegento.com"
+        }
+    ],
+    "extra": {
+        "magento_connect": {
+            "name": "Hackathon_PromoCodeMessages",
+            "summary": "Improves error messages when entering promo codes in the cart",
+            "channel": "community",
+            "php_min": "5.3.0",
+            "php_max": "7.9.9",
+            "stability": "stable",
+            "license_uri": "http://www.gnu.org/licenses/gpl-3.0.html",
+            "content":[
+                {
+                    "type": "magecommunity",
+                    "structure": "dir",
+                    "path": "Hackathon/PromoCodeMessages"
+                },
+                {
+                    "type": "mageetc",
+                    "structure": "file",
+                    "path": "modules/Hackathon_PromoCodeMessages.xml"
+                }
+            ]
+        }
+    }
+}
