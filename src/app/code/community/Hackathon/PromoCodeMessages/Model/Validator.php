@@ -35,6 +35,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
     protected function _formatMessage($msg)
     {
-        return Mage::helper('hackathon_promocodemessage')->__($msg);
+        return Mage::helper('hackathon_promocodemessages')->__($msg);
     }
 }
