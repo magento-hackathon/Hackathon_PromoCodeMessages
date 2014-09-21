@@ -11,6 +11,14 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
+     * Default values for possible operator options
+     * @var array
+     */
+    protected $_defaultOperatorOptions = null;
+    
+
+
+    /**
      * @param $couponCode
      * @param Mage_Sales_Model_Quote $quote
      * @return string
@@ -121,6 +129,24 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _validateConditions($rule)
     {
         $conditions = $this->_getConditions($rule);
+        foreach ($conditions as $condition)
+        {
+            $attribute = $condition['attribute'];
+            $operator = $condition['operator'];
+            $value = $condition['value'];
+
+            foreach ($this->getDefaultOperatorOptions() as $op => $text)
+            {
+                if ($op == $operator) {
+                    $msg = sprintf('%s must be %s %s', $attribute, $text, $value);
+                    Mage::throwException($this->_formatMessage(
+                        $msg,
+                        array($attribute, $text, $value),
+                        ''
+                    ));
+                }
+            }
+        }
     }
 
 
@@ -149,5 +175,31 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
 
         return $this->_conditions;
+    }
+
+    /**
+     * Default operator options getter
+     * Provides all possible operator options
+     *
+     * @return array
+     */
+    public function getDefaultOperatorOptions()
+    {
+        $_helper = Mage::helper('hackathon_promocodemessages');
+        if (null === $this->_defaultOperatorOptions) {
+            $this->_defaultOperatorOptions = array(
+                '=='  => $_helper->__('is'),
+                '!='  => $_helper->__('is not'),
+                '>='  => $_helper->__('equals or greater than'),
+                '<='  => $_helper->__('equals or less than'),
+                '>'   => $_helper->__('greater than'),
+                '<'   => $_helper->__('less than'),
+                '{}'  => $_helper->__('contains'),
+                '!{}' => $_helper->__('does not contain'),
+                '()'  => $_helper->__('is one of'),
+                '!()' => $_helper->__('is not one of')
+            );
+        }
+        return $this->_defaultOperatorOptions;
     }
 }
