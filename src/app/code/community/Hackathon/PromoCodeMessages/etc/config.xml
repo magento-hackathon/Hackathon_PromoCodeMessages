@@ -40,4 +40,12 @@
             </sales_quote_collect_totals_after>
         </events>
     </frontend>
+
+    <default>
+        <checkout>
+            <promocodemessages>
+                <use_internal_message_on_frontend>0</use_internal_message_on_frontend>
+            </promocodemessages>
+        </checkout>
+    </default>
 </config>

@@ -33,11 +33,16 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * Tranlsate the message
      * 
      * @param string $message
+     * @param array $params
+     * @param string $internalMessage
      * @return string
      */
-    protected function _formatMessage($message)
+    protected function _formatMessage($message, $params = array(), $internalMessage = null)
     {
-        return Mage::helper('hackathon_promocodemessages')->__($message);
+        if (!is_null($internalMessage) && Mage::getStoreConfigFlag('checkout/promocodemessages/use_internal_message_on_frontend')) {
+            return Mage::helper('hackathon_promocodemessages')->__($internalMessage, $params);
+        }
+        return Mage::helper('hackathon_promocodemessages')->__($message, $params);
     }
 
     /**
