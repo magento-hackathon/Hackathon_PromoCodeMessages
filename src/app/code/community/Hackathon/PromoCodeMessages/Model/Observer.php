@@ -26,7 +26,7 @@ class Hackathon_PromoCodeMessages_Model_Observer
             {
                 // parent validation has failed
                 $couponCode = (string)Mage::app()->getRequest()->getParam('coupon_code');
-                $msg = Mage::getModel('hackathon_promocodemessages/validator')->validate($couponCode);
+                $msg = Mage::getModel('hackathon_promocodemessages/validator')->validate($couponCode, $quote);
                 Mage::throwException($msg);
 
             }

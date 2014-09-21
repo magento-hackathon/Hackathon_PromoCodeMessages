@@ -2,13 +2,17 @@
 
 class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstract
 {
-
+    /** @var Mage_Sales_Model_Quote */
+    protected $_quote = null; 
+    
     /**
      * @param $couponCode
+     * @param Mage_Sales_Model_Quote $quote
      * @return string
      */
-    public function validate($couponCode)
+    public function validate($couponCode, $quote)
     {
+        $this->_quote = $quote;
 
         try {
             /** @var Mage_SalesRule_Model_Coupon $coupon */
@@ -25,6 +29,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         /** @var $rule Mage_SalesRule_Model_Rule */
         $rule = Mage::getModel('salesrule/rule')->load($coupon->getRuleId());
+        
         $this->_validateGeneral($rule);
         $this->_validateConditions($rule);
     }
@@ -54,6 +59,8 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if (!$rule->getIsActive()) {
             Mage::throwException($this->_formatMessage('Code is inactive'));
         }
+        
+        
     }
     
     /**
@@ -62,5 +69,13 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      */
     protected function _validateConditions($rule)
     {
+    }
+
+    /**
+     * @return Mage_Sales_Model_Quote
+     */
+    protected function _getQuote() 
+    {
+        return $this->_quote;
     }
 }
