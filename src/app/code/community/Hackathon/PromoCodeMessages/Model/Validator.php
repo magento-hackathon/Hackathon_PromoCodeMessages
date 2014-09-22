@@ -216,7 +216,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      */
     public function getDefaultOperatorOptions()
     {
-        $_helper = Mage::helper('hackathon_promocodemessages');
+        $_helper = Mage::helper('rule');
         if (null === $this->_defaultOperatorOptions) {
             $this->_defaultOperatorOptions = array(
                 '=='  => $_helper->__('is'),

@@ -39,6 +39,16 @@
                 </observers>
             </sales_quote_collect_totals_after>
         </events>
+
+        <translate>
+            <modules>
+                <Hackathon_PromoCodeMessages>
+                    <files>
+                        <default>Hackathon_PromoCodeMessages.csv</default>
+                    </files>
+                </Hackathon_PromoCodeMessages>
+            </modules>
+        </translate>
     </frontend>
 
     <default>
