@@ -99,7 +99,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 ->addFieldToFilter('customer_group_id', array('in' => $groupIds))
                 ->getColumnValues('customer_group_code');
             Mage::throwException($this->_formatMessage(
-                'Your coupon is not valid for your Customer Group',
+                'Your coupon is not valid for your Customer Group.',
                 implode(', ', $customerGroupNames),
                 'Allowed Customer Groups: %s.'
             ));
@@ -109,7 +109,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $fromDate = new Zend_Date($rule->getFromDate());
         if (Zend_Date::now()->isEarlier($fromDate)) {
             Mage::throwException($this->_formatMessage(
-                'Your coupon is not valid yet. It will get active on %s.',
+                'Your coupon is not valid yet. It will be active on %s.',
                 Mage::helper('core')->formatDate($fromDate),
                 ''
             ));
@@ -119,7 +119,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $toDate = new Zend_Date($rule->getToDate());
         if (Zend_Date::now()->isLater($toDate)) {
             Mage::throwException($this->_formatMessage(
-                'Your coupon is not valid any more. It expired on %s.',
+                'Your coupon is no longer valid. It expired on %s.',
                 Mage::helper('core')->formatDate($toDate),
                 ''
             ));
