@@ -1,21 +1,28 @@
 <?php
 
 
+/**
+ * Validates promo codes after the core Magento validation occurs.
+ */
 class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstract
 {
 
     /** @var Mage_Sales_Model_Quote */
     protected $_quote = null;
 
+    /**
+     * Array of conditions attached to the current rule.
+     * @var array
+     */
     protected $_conditions = array();
 
 
     /**
-     * Default values for possible operator options
+     * Default values for possible operator options.
+     *
      * @var array
      */
-    protected $_defaultOperatorOptions = null;
-
+    protected $_operators = null;
 
 
     /**
@@ -61,9 +68,11 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _formatMessage($message, $params = '', $internalMessage = null)
     {
         $message = Mage::helper('hackathon_promocodemessages')->__($message, $params);
-        if (!is_null($internalMessage) && Mage::getStoreConfigFlag('checkout/promocodemessages/add_additional_info_on_frontend')) {
+        if (!is_null($internalMessage) &&
+            Mage::getStoreConfigFlag('checkout/promocodemessages/add_additional_info_on_frontend')) {
             $message .= '<br />' . Mage::helper('hackathon_promocodemessages')->__($internalMessage, $params);
         }
+
         return $message;
     }
 
@@ -155,20 +164,19 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
     /**
      * TODO: format currency, attribute name
+     *
      * @param Mage_SalesRule_Model_Rule $rule
      * @return string
      */
     protected function _validateConditions($rule)
     {
         $conditions = $this->_getConditions($rule);
-        foreach ($conditions as $condition)
-        {
+        foreach ($conditions as $condition) {
             $attribute = $condition['attribute'];
             $operator = $condition['operator'];
             $value = $condition['value'];
 
-            foreach ($this->getDefaultOperatorOptions() as $op => $text)
-            {
+            foreach ($this->getOperators() as $op => $text) {
                 if ($op == $operator) {
                     $msg = sprintf('%s %s %s', $attribute, $text, $value);
                     Mage::throwException($this->_formatMessage(
@@ -209,29 +217,31 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         return $this->_conditions;
     }
 
+
     /**
      * Default operator options getter
      * Provides all possible operator options
      *
      * @return array
      */
-    public function getDefaultOperatorOptions()
+    public function getOperators()
     {
         $_helper = Mage::helper('rule');
-        if (null === $this->_defaultOperatorOptions) {
-            $this->_defaultOperatorOptions = array(
-                '=='  => $_helper->__('must be'),
-                '!='  => $_helper->__('must not be'),
-                '>='  => $_helper->__('must be equal or greater than'),
-                '<='  => $_helper->__('must be  equal or less than'),
-                '>'   => $_helper->__('must be greater than'),
-                '<'   => $_helper->__('must be less than'),
-                '{}'  => $_helper->__('must contain'),
+        if (null === $this->_operators) {
+            $this->_operators = array(
+                '==' => $_helper->__('must be'),
+                '!=' => $_helper->__('must not be'),
+                '>=' => $_helper->__('must be equal or greater than'),
+                '<=' => $_helper->__('must be  equal or less than'),
+                '>' => $_helper->__('must be greater than'),
+                '<' => $_helper->__('must be less than'),
+                '{}' => $_helper->__('must contain'),
                 '!{}' => $_helper->__('must not contain'),
-                '()'  => $_helper->__('must be one of'),
+                '()' => $_helper->__('must be one of'),
                 '!()' => $_helper->__('must not be one of')
             );
         }
-        return $this->_defaultOperatorOptions;
+
+        return $this->_operators;
     }
 }
