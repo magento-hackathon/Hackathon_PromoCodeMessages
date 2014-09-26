@@ -176,7 +176,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $operator = $condition['operator'];
             $value = $condition['value'];
 
-            foreach ($this->getOperators() as $op => $text) {
+            foreach ($this->_getOperators() as $op => $text) {
                 if ($op == $operator) {
                     $msg = sprintf('%s %s %s', $attribute, $text, $value);
                     Mage::throwException($this->_formatMessage(
@@ -224,7 +224,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      *
      * @return array
      */
-    public function getOperators()
+    protected function _getOperators()
     {
         $_helper = Mage::helper('rule');
         if (null === $this->_operators) {
