@@ -4,7 +4,7 @@
         <checkout>
             <groups>
                 <promocodemessages translate="label" module="hackathon_promocodemessages">
-                    <label>Promo Product Messages</label>
+                    <label>Promo Code Error Messages</label>
                     <frontend_type>text</frontend_type>
                     <sort_order>100</sort_order>
                     <show_in_default>1</show_in_default>
