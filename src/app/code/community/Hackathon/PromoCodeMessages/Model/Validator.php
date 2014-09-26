@@ -15,7 +15,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * @var array
      */
     protected $_defaultOperatorOptions = null;
-    
+
 
 
     /**
@@ -154,6 +154,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
+     * TODO: format currency, attribute name
      * @param Mage_SalesRule_Model_Rule $rule
      * @return string
      */
@@ -169,7 +170,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             foreach ($this->getDefaultOperatorOptions() as $op => $text)
             {
                 if ($op == $operator) {
-                    $msg = sprintf('%s must be %s %s', $attribute, $text, $value);
+                    $msg = sprintf('%s %s %s', $attribute, $text, $value);
                     Mage::throwException($this->_formatMessage(
                         $msg,
                         array($attribute, $text, $value),
@@ -219,16 +220,16 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $_helper = Mage::helper('rule');
         if (null === $this->_defaultOperatorOptions) {
             $this->_defaultOperatorOptions = array(
-                '=='  => $_helper->__('is'),
-                '!='  => $_helper->__('is not'),
-                '>='  => $_helper->__('equals or greater than'),
-                '<='  => $_helper->__('equals or less than'),
-                '>'   => $_helper->__('greater than'),
-                '<'   => $_helper->__('less than'),
-                '{}'  => $_helper->__('contains'),
-                '!{}' => $_helper->__('does not contain'),
-                '()'  => $_helper->__('is one of'),
-                '!()' => $_helper->__('is not one of')
+                '=='  => $_helper->__('must be'),
+                '!='  => $_helper->__('must not be'),
+                '>='  => $_helper->__('must be equal or greater than'),
+                '<='  => $_helper->__('must be  equal or less than'),
+                '>'   => $_helper->__('must be greater than'),
+                '<'   => $_helper->__('must be less than'),
+                '{}'  => $_helper->__('must contain'),
+                '!{}' => $_helper->__('must not contain'),
+                '()'  => $_helper->__('must be one of'),
+                '!()' => $_helper->__('must not be one of')
             );
         }
         return $this->_defaultOperatorOptions;
