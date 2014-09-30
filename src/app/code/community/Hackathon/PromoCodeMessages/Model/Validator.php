@@ -175,18 +175,63 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $attribute = $condition['attribute'];
             $operator = $condition['operator'];
             $value = $condition['value'];
+            $type = $condition['type'];
 
-            foreach ($this->_getOperators() as $op => $text) {
-                if ($op == $operator) {
-                    $msg = sprintf('%s %s %s', $attribute, $text, $value);
-                    Mage::throwException($this->_formatMessage(
-                        $msg,
-                        array($attribute, $text, $value),
-                        ''
-                    ));
+            $msg = null;
+
+            // Get rule type in order to determine attributes
+            if ($type == 'salesrule/rule_condition_address') {
+                $ruleType = Mage::getModel($type);
+                foreach ($this->_getOperators() as $operatorCode => $operatorText) {
+                    if ($operatorCode == $operator) {
+                        $attributeOptions = $ruleType->getAttributeOption();
+                        foreach ($attributeOptions as $attributeOptionCode => $attributeOptionText) {
+                            if ($attribute == $attributeOptionCode) {
+                                $msg = sprintf('%s %s %s.', $attributeOptionText, $operatorText, $value);
+                                Mage::throwException($this->_formatMessage(
+                                    $msg,
+                                    array($attribute, $operatorText, $value),
+                                    ''
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+            elseif ($type == 'salesrule/rule_condition_product_found') { // TODO:
+                // this rule type has subconditions
+                $subConditions = $condition['conditions'];
+                foreach ($subConditions as $subCondition) {
+                    $attribute = $subCondition['attribute'];
+                    $operator = $subCondition['operator'];
+                    $value = $subCondition['value'];
+                    $type = $subCondition['type'];
+                    $ruleType = Mage::getModel($type);
+
+                    foreach ($this->_getOperators() as $operatorCode => $operatorText) {
+                        if ($operatorCode == $operator) {
+                            $attributeOptions = $ruleType->getAttributeOption();
+                            foreach ($attributeOptions as $attributeOptionCode => $attributeOptionText) {
+                                if ($attribute == $attributeOptionCode) {
+                                    $msg = sprintf('%s %s %s.', $attributeOptionText, $operatorText, $value);
+                                    Mage::throwException($this->_formatMessage(
+                                        $msg,
+                                        array($attribute, $operatorText, $value),
+                                        ''
+                                    ));
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+
+
+    protected function _processRuleTypes($type, $condition = array())
+    {
+
     }
 
 
