@@ -117,7 +117,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
 
         // check from date
-        $fromDate = new Zend_Date($rule->getFromDate());
+        $fromDate = new Zend_Date($rule->getFromDate(), Varien_Date::DATE_INTERNAL_FORMAT);
         if (Zend_Date::now()->isEarlier($fromDate)) {
             Mage::throwException($this->_formatMessage(
                 'Your coupon is not valid yet. It will be active on %s.',
@@ -127,7 +127,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
 
         // check to date
-        $toDate = new Zend_Date($rule->getToDate());
+        $toDate = new Zend_Date($rule->getToDate(), Varien_Date::DATE_INTERNAL_FORMAT);
         if (Zend_Date::now()->isLater($toDate)) {
             Mage::throwException($this->_formatMessage(
                 'Your coupon is no longer valid. It expired on %s.',
@@ -176,13 +176,18 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         foreach ($conditions as $condition) {
             $type = $condition['type'];
 
-            $msg = null;
-
             // Get rule type in order to determine attributes
             if ($type == 'salesrule/rule_condition_address') {
                 $this->_processRuleTypes($condition);
             }
-            elseif ($type == 'salesrule/rule_condition_product_found') { // TODO:
+            elseif ($type == 'salesrule/rule_condition_product_found') {
+                // this rule type has subconditions
+                $subConditions = $condition['conditions'];
+                foreach ($subConditions as $subCondition) {
+                    $this->_processRuleTypes($subCondition);
+                }
+            }
+            elseif ($type == 'salesrule/rule_condition_product_subselect') {
                 // this rule type has subconditions
                 $subConditions = $condition['conditions'];
                 foreach ($subConditions as $subCondition) {

@@ -22,8 +22,7 @@ class Hackathon_PromoCodeMessages_Model_Observer
             $quote = $observer->getQuote();
             $couponCode = $quote->getCouponCode();
 
-            if (!$couponCode || $couponCode == '')
-            {
+            if (!$couponCode || $couponCode == '') {
                 // parent validation has failed
                 $couponCode = (string)Mage::app()->getRequest()->getParam('coupon_code');
                 Mage::getModel('hackathon_promocodemessages/validator')->validate($couponCode, $quote);
