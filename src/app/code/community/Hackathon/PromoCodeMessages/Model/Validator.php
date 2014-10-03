@@ -173,27 +173,40 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _validateConditions($rule)
     {
         $conditions = $this->_getConditions($rule);
+        $msgs = array();
+
         foreach ($conditions as $condition) {
             $type = $condition['type'];
 
             // Get rule type in order to determine attributes
             if ($type == 'salesrule/rule_condition_address') {
-                $this->_processRuleTypes($condition);
+                $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
             }
             elseif ($type == 'salesrule/rule_condition_product_found') {
                 // this rule type has subconditions
                 $subConditions = $condition['conditions'];
                 foreach ($subConditions as $subCondition) {
-                    $this->_processRuleTypes($subCondition);
+                    $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
                 }
             }
             elseif ($type == 'salesrule/rule_condition_product_subselect') {
-                // this rule type has subconditions
+                // this rule type has a condition AND subconditions, tied by an aggregator
+                $aggregator = $condition['aggregator'];
+                $heading = Mage::helper('hackathon_promocodemessages')->__('All the following conditions must be met:<br/>');
+                if ($aggregator == 'any') {
+                    $heading = Mage::helper('hackathon_promocodemessages')->__('At least one of the following conditions must be met:<br/>');
+                }
+                $msgs[] = $heading;
+                $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
                 $subConditions = $condition['conditions'];
                 foreach ($subConditions as $subCondition) {
-                    $this->_processRuleTypes($subCondition);
+                    $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
                 }
             }
+        }
+        if (count($msgs) > 0) {
+            $errorMsgs = implode('<br/>', $msgs);
+            Mage::throwException($this->_formatMessage($errorMsgs));
         }
     }
 
@@ -211,6 +224,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $value = $condition['value'];
         $type = $condition['type'];
         $ruleType = Mage::getModel($type);
+        $msgs = array();
 
         foreach ($this->_getOperators() as $operatorCode => $operatorText) {
             if ($operatorCode == $operator) {
@@ -218,15 +232,21 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 foreach ($attributeOptions as $attributeOptionCode => $attributeOptionText) {
                     if ($attribute == $attributeOptionCode) {
                         $msg = sprintf('%s %s %s.', $attributeOptionText, $operatorText, $value);
-                        Mage::throwException($this->_formatMessage(
-                            $msg,
-                            array($attribute, $operatorText, $value),
-                            ''
-                        ));
+                        $msgs[] = $msg;
+                        break;
                     }
                 }
+                break;
             }
         }
+
+        return $msgs;
+//        if (count($msgs) > 0) {
+//
+//            Mage::throwException($this->_formatMessage(
+//                implode('<br/>', $msgs)
+//            ));
+//        }
     }
 
 
