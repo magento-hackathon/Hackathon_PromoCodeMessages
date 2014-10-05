@@ -171,7 +171,8 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
-     * TODO: format currency, attribute name
+     * Validate conditions.
+     * TODO: format currency
      *
      * @param Mage_SalesRule_Model_Rule $rule
      * @return string
@@ -190,19 +191,15 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             }
             elseif ($type == 'salesrule/rule_condition_product_found') {
                 // this rule type has subconditions
+                $msgs[] = $this->_createAggregatedHeading($condition['aggregator']);
                 $subConditions = $condition['conditions'];
                 foreach ($subConditions as $subCondition) {
                     $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
                 }
             }
             elseif ($type == 'salesrule/rule_condition_product_subselect') {
-                // this rule type has a condition AND subconditions, tied by an aggregator
-                $aggregator = $condition['aggregator'];
-                $heading = Mage::helper('hackathon_promocodemessages')->__('All the following conditions must be met:<br/>');
-                if ($aggregator == 'any') {
-                    $heading = Mage::helper('hackathon_promocodemessages')->__('At least one of the following conditions must be met:<br/>');
-                }
-                $msgs[] = $heading;
+                // this rule type has a condition AND subconditions
+                $msgs[] = $this->_createAggregatedHeading($condition['aggregator']);
                 $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
                 $subConditions = $condition['conditions'];
                 foreach ($subConditions as $subCondition) {
@@ -218,6 +215,21 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
+     * Setup a heading for aggregated rule conditions.
+     * @param String $aggregator "any" or "all"
+     * @return mixed
+     */
+    protected function _createAggregatedHeading($aggregator) {
+
+        $heading = Mage::helper('hackathon_promocodemessages')->__('All of the following conditions must be met:<br/>');
+        if ($aggregator == 'any') {
+            $heading = Mage::helper('hackathon_promocodemessages')->__('At least one of the following conditions must be met:<br/>');
+        }
+        return $heading;
+    }
+
+
+    /**
      * Gets details from the given rule condition and matches against operator.
      *
      * @param array $condition
@@ -225,19 +237,48 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      */
     protected function _processRuleTypes($condition = array())
     {
-        $attribute = $condition['attribute'];
+        $attribute = $condition['attribute']; // TODO: handle "category_ids"
         $operator = $condition['operator'];
         $value = $condition['value'];
         $type = $condition['type'];
         $ruleType = Mage::getModel($type);
         $msgs = array();
 
+        if ($attribute == 'category_ids') {
+            $categoryIds = explode(',', $value);
+            $values = array();
+            foreach ($categoryIds as $categoryId) {
+                $category = Mage::getModel('catalog/category')->load($categoryId);
+                $values[] = $category->getName();
+            }
+            $value = implode(', ', $values);
+        }
+        if ($type == 'salesrule/rule_condition_product') {
+            // load attribute; it may have a source model where we'll need the store display value
+            $attributeModel = Mage::getModel('eav/entity_attribute')
+                ->loadByCode(Mage_Catalog_Model_Product::ENTITY, $attribute);
+
+            if ($attributeModel->getSourceModel()) {
+
+                $storeId = Mage::app()->getStore()->getStoreId();
+                $attributeId = $attributeModel->getAttributeId();
+                $collection = Mage::getResourceModel('eav/entity_attribute_option_collection') // TODO: better way?
+                     ->setAttributeFilter($attributeId)
+                     ->setStoreFilter($storeId, false)
+                     ->addFieldToFilter('tsv.option_id', array('in' => $value));
+                if ($collection->getSize() > 0) {
+                    $item = $collection->getFirstItem();
+                    $value = $item->getValue();
+                }
+            }
+        }
+
         foreach ($this->_getOperators() as $operatorCode => $operatorText) {
             if ($operatorCode == $operator) {
                 $attributeOptions = $ruleType->getAttributeOption();
                 foreach ($attributeOptions as $attributeOptionCode => $attributeOptionText) {
                     if ($attribute == $attributeOptionCode) {
-                        $msg = sprintf('%s %s %s.', $attributeOptionText, $operatorText, $value);
+                        $msg = sprintf('%s %s <em>%s</em>.', $attributeOptionText, $operatorText, $value);
                         $msgs[] = $msg;
                         break;
                     }
@@ -247,12 +288,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
 
         return $msgs;
-//        if (count($msgs) > 0) {
-//
-//            Mage::throwException($this->_formatMessage(
-//                implode('<br/>', $msgs)
-//            ));
-//        }
     }
 
 
