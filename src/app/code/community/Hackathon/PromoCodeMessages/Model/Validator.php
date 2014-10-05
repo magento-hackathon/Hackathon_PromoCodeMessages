@@ -27,6 +27,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
+     * Main entry point.
      * @param $couponCode
      * @param Mage_Sales_Model_Quote $quote
      * @return string
@@ -61,7 +62,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
-     * Tranlsate the message
+     * Tranlsate the message.
      *
      * @param string $message
      * @param string $params
@@ -82,6 +83,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
+     * Validates conditions in the "Rule Information" tab of sales rule admin.
      * @param Mage_SalesRule_Model_Rule $rule
      * @param Mage_SalesRule_Model_Coupon $coupon
      * @return string
@@ -171,7 +173,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
-     * Validate conditions.
+     * Validate conditions in the "Conditions" tab of sales rule admin.
      * TODO: format currency
      *
      * @param Mage_SalesRule_Model_Rule $rule
@@ -237,7 +239,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      */
     protected function _processRuleTypes($condition = array())
     {
-        $attribute = $condition['attribute']; // TODO: handle "category_ids"
+        $attribute = $condition['attribute'];
         $operator = $condition['operator'];
         $value = $condition['value'];
         $type = $condition['type'];
