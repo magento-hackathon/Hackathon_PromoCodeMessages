@@ -5,6 +5,7 @@
             <version>0.1.0</version>
         </Hackathon_PromoCodeMessages>
     </modules>
+
     <global>
         <models>
             <hackathon_promocodemessages>
@@ -15,11 +16,7 @@
                 <class>Hackathon_PromoCodeMessages_Model_Resource</class>
             </hackathon_promocodemessages_resource>
         </models>
-        <blocks>
-            <hackathon_promocodemessages>
-                <class>Hackathon_PromoCodeMessages_Block</class>
-            </hackathon_promocodemessages>
-        </blocks>
+
         <helpers>
             <hackathon_promocodemessages>
                 <class>Hackathon_PromoCodeMessages_Helper</class>
@@ -55,7 +52,16 @@
         <checkout>
             <promocodemessages>
                 <add_additional_info_on_frontend>0</add_additional_info_on_frontend>
+                <include_conditions>0</include_conditions>
             </promocodemessages>
         </checkout>
     </default>
+
+    <phpunit>
+        <suite>
+            <modules>
+                <Hackathon_PromoCodeMessages />
+            </modules>
+        </suite>
+    </phpunit>
 </config>
