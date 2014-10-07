@@ -3,7 +3,7 @@
     "license": "GPL-3.0",
     "type": "magento-module",
     "description": "Improves error messages when entering promo codes in the cart",
-    "homepage": "https://github.com/MeetMagentoNY/Hackathon_PromoCodeMessages",
+    "homepage": "https://github.com/magento-hackathon/Hackathon_PromoCodeMessages",
     "authors": [
         {
             "name": "Laura Folco",
