@@ -1,6 +1,6 @@
 {
     "name": "hackathon/promocodemessages",
-    "license": "GPL-3.0",
+    "license": "OSL-3.0",
     "type": "magento-module",
     "description": "Improves error messages when entering promo codes in the cart",
     "homepage": "https://github.com/magento-hackathon/Hackathon_PromoCodeMessages",
@@ -31,7 +31,7 @@
             "php_min": "5.3.0",
             "php_max": "7.9.9",
             "stability": "stable",
-            "license_uri": "http://www.gnu.org/licenses/gpl-3.0.html",
+            "license_uri": "http://opensource.org/licenses/OSL-3.0",
             "content":[
                 {
                     "type": "magecommunity",
