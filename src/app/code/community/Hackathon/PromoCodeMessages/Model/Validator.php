@@ -91,11 +91,14 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      */
     protected function _formatMessage($message, $params = '', $internalMessage = null)
     {
-        $message = Mage::helper('hackathon_promocodemessages')->__($message, $params);
+        $message = sprintf('<div class="promo_error_message">%s</div>',
+            Mage::helper('hackathon_promocodemessages')->__($message, $params));
+
         if (!is_null($internalMessage) &&
             Mage::getStoreConfigFlag('checkout/promocodemessages/add_additional_info_on_frontend')
         ) {
-            $message .= '<br />' . Mage::helper('hackathon_promocodemessages')->__($internalMessage, $params);
+            $message .= sprintf('<div class="promo_error_additional">%s</div>',
+                Mage::helper('hackathon_promocodemessages')->__($internalMessage, $params));
         }
 
         return $message;
@@ -195,6 +198,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     /**
      * Validate conditions in the "Conditions" tab of sales rule admin.
      * TODO: format currency
+     * TODO: refactor to reduce code duplication
      *
      * @param Mage_SalesRule_Model_Rule $rule
      * @return string
@@ -202,6 +206,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _validateConditions($rule)
     {
         $conditions = $this->_getConditions($rule);
+        $headingMsg = '';
         $msgs = array();
 
         foreach ($conditions as $condition) {
@@ -213,7 +218,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             }
             elseif ($type == 'salesrule/rule_condition_product_found') {
                 // this rule type has subconditions
-                $msgs[] = $this->_createAggregatedHeading($condition['aggregator']);
+                $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
                 $subConditions = $condition['conditions'];
                 foreach ($subConditions as $subCondition) {
                     $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
@@ -221,8 +226,15 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             }
             elseif ($type == 'salesrule/rule_condition_product_subselect') {
                 // this rule type has a condition AND subconditions
-                $msgs[] = $this->_createAggregatedHeading($condition['aggregator']);
+                $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
                 $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
+                $subConditions = $condition['conditions'];
+                foreach ($subConditions as $subCondition) {
+                    $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
+                }
+            }
+            elseif ($type == 'salesrule/rule_condition_combine') {
+                $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
                 $subConditions = $condition['conditions'];
                 foreach ($subConditions as $subCondition) {
                     $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
@@ -230,7 +242,10 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             }
         }
         if (count($msgs) > 0) {
-            $errorMsgs = implode('<br/>', $msgs);
+            $errorMsgs = $headingMsg;
+            foreach ($msgs as $msg) {
+                $errorMsgs .= '<div class="promo_error_item">' . $msg . '</div>';
+            }
             Mage::throwException($this->_formatMessage($errorMsgs));
         }
     }
@@ -243,9 +258,11 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      */
     protected function _createAggregatedHeading($aggregator) {
 
-        $heading = Mage::helper('hackathon_promocodemessages')->__('All of the following conditions must be met:<br/>');
+        $heading = sprintf('<div class="promo_error_heading">%s</div>',
+            Mage::helper('hackathon_promocodemessages')->__('All of the following conditions must be met:'));
         if ($aggregator == 'any') {
-            $heading = Mage::helper('hackathon_promocodemessages')->__('At least one of the following conditions must be met:<br/>');
+            $heading = sprintf('<div class="promo_error_heading">%s</div>',
+                Mage::helper('hackathon_promocodemessages')->__('At least one of the following conditions must be met:'));
         }
         return $heading;
     }
@@ -279,10 +296,10 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             // load attribute; it may have a source model where we'll need the store display value
             $attributeModel = Mage::getModel('eav/entity_attribute')
                 ->loadByCode(Mage_Catalog_Model_Product::ENTITY, $attribute);
+            $storeId = Mage::app()->getStore()->getStoreId();
 
-            if ($attributeModel->getSourceModel()) {
-
-                $storeId = Mage::app()->getStore()->getStoreId();
+            // attribute has a source model
+            if ($attributeModel->usesSource()) {
                 $attributeId = $attributeModel->getAttributeId();
                 $collection = Mage::getResourceModel('eav/entity_attribute_option_collection') // TODO: better way?
                      ->setAttributeFilter($attributeId)
