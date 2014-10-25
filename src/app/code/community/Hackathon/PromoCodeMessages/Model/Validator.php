@@ -200,7 +200,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
     /**
      * Validate conditions in the "Conditions" tab of sales rule admin.
-     * TODO: conditions array could have multiple layers of subconditions
      *
      * @param Mage_SalesRule_Model_Rule $rule
      * @return string
@@ -223,6 +222,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     /**
      * Process a single condition. The given condition may have subconditions, so function is recursive until it's
      * complete.
+     *
      * @param array $condition
      * @return array
      */
@@ -237,7 +237,8 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         // aggregate conditions
         if (isset($condition['aggregator']) && isset($condition['conditions'])) {
-            $headingMsg = $this->_createAggregatedHeading($condition['aggregator'], $aggregatedOnly);
+            $headingMsg = sprintf('<li class="promo_error_heading">%s<ul>',
+                $this->_createAggregatedHeading($condition['aggregator'], $aggregatedOnly));
             $msgs[] = $headingMsg;
             $subMsgs = array();
             $subConditions = $condition['conditions'];
@@ -245,6 +246,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 $subMsgs[] = $this->_processCondition($subCondition);
             }
             $msgs[] = $subMsgs;
+            $msgs[] = '</ul></li>';
         }
 
         return $msgs;
@@ -327,7 +329,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             }
         }
 
-        return $msg ? '<div class="promo_error_item">' . $msg . '</div>' : null;
+        return $msg ? '<li class="promo_error_item">' . $msg . '</li>' : null;
     }
 
 
@@ -343,21 +345,21 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         if ($aggregatedOnly) {
             if ($aggregator == 'any') {
-                $heading = sprintf('<div class="promo_error_heading">%s</div>',
+                $heading = sprintf('%s',
                     $this->_helper->__('At least one of the following conditions must be met:'));
             }
             else {
-                $heading = sprintf('<div class="promo_error_heading">%s</div>',
+                $heading = sprintf('%s',
                     $this->_helper->__('All of the following conditions must be met:'));
             }
         }
         else {
             if ($aggregator == 'any') {
-                $heading = sprintf('<div class="promo_error_heading">%s</div>',
+                $heading = sprintf('%s',
                     $this->_helper->__('In addition, at least one of the following conditions must be met:'));
             }
             else {
-                $heading = sprintf('<div class="promo_error_heading">%s</div>',
+                $heading = sprintf('%s',
                     $this->_helper->__('In addition, all of the following conditions must be met:'));
             }
         }
@@ -376,13 +378,13 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      */
     protected function _formatMessage($message, $params = '', $internalMessage = null)
     {
-        $message = sprintf('<div class="promo_error_message">%s</div>',
+        $message = sprintf('<ul class="promo_error_message">%s</ul>',
             $this->_helper->__($message, $params));
 
         if (!is_null($internalMessage) &&
             Mage::getStoreConfigFlag('checkout/promocodemessages/add_additional_info_on_frontend')
         ) {
-            $message .= sprintf('<div class="promo_error_additional">%s</div>',
+            $message .= sprintf('<ul class="promo_error_additional">%s</ul>',
                 $this->_helper->__($internalMessage, $params));
         }
 
@@ -425,6 +427,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
     /**
      * Unserialize the conditions from the rule.
+     *
      * @param Mage_SalesRule_Model_Rule $rule
      * @return Array of rule conditions
      */
