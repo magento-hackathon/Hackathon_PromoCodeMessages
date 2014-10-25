@@ -216,42 +216,72 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _validateConditions($rule)
     {
         $conditions = $this->_getConditions($rule);
-        Mage::log(__METHOD__ . ' conditions: ' . print_r($conditions, true));
+//        Mage::log(__METHOD__ . ' conditions: ' . print_r($conditions, true));
         $headingMsg = '';
         $msgs = array();
 
         foreach ($conditions as $condition) {
-            $type = $condition['type'];
-
-            // Get rule type in order to determine attributes
-            if ($type == 'salesrule/rule_condition_address') {
-                $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
-            }
-            // this rule type has subconditions
-            elseif ($type == 'salesrule/rule_condition_product_found' || $type == 'salesrule/rule_condition_combine') {
-                $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
-                $subConditions = $condition['conditions'];
-                foreach ($subConditions as $subCondition) {
-                    $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
-                }
-            }
-            // this rule type has a condition AND subconditions
-            elseif ($type == 'salesrule/rule_condition_product_subselect') {
-                $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
-                $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
-                $subConditions = $condition['conditions'];
-                foreach ($subConditions as $subCondition) {
-                    $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
-                }
-            }
+            $msgs = array_merge($msgs, $this->_processCondition($condition));
+//            $type = $condition['type'];
+//
+//            // Get rule type in order to determine attributes
+//            if ($type == 'salesrule/rule_condition_address') {
+//                $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
+//            }
+//            // this rule type has subconditions
+//            elseif ($type == 'salesrule/rule_condition_product_found' || $type == 'salesrule/rule_condition_combine') {
+//                $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
+//                $subConditions = $condition['conditions'];
+//                foreach ($subConditions as $subCondition) {
+//                    $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
+//                }
+//            }
+//            // this rule type has a condition AND subconditions
+//            elseif ($type == 'salesrule/rule_condition_product_subselect') {
+//                $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
+//                $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
+//                $subConditions = $condition['conditions'];
+//                foreach ($subConditions as $subCondition) {
+//                    $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
+//                }
+//            }
         }
+//        if (count($msgs) > 0) {
+//            $errorMsgs = $headingMsg;
+//            foreach ($msgs as $msg) {
+//                $errorMsgs .= '<div class="promo_error_item">' . $msg . '</div>';
+//            }
+//            Mage::log(__METHOD__ . '  msgs: ' . print_r($msgs, true));
+//            Mage::throwException($this->_formatMessage($errorMsgs));
+//        }
         if (count($msgs) > 0) {
-            $errorMsgs = $headingMsg;
+            $errorMsgs = '';
             foreach ($msgs as $msg) {
                 $errorMsgs .= '<div class="promo_error_item">' . $msg . '</div>';
             }
+            Mage::log(__METHOD__ . '  msgs: ' . print_r($msgs, true));
             Mage::throwException($this->_formatMessage($errorMsgs));
         }
+    }
+
+
+    protected function _processCondition($condition) {
+        $msgs = array();
+
+        // aggregate conditions
+        if (isset($condition['aggregator']) && isset($condition['conditions'])) {
+            $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
+            $msgs[] = $headingMsg;
+            $subConditions = $condition['conditions'];
+            foreach ($subConditions as $subCondition) {
+                $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
+            }
+        }
+        else {
+            $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
+        }
+        Mage::log(__METHOD__ . '  msgs: ' . print_r($msgs, true));
+        return $msgs;
     }
 
 
