@@ -268,6 +268,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _processCondition($condition) {
         $msgs = array();
 
+        $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
         // aggregate conditions
         if (isset($condition['aggregator']) && isset($condition['conditions'])) {
             $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
@@ -277,9 +278,9 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
             }
         }
-        else {
-            $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
-        }
+//        else {
+//            $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
+//        }
         Mage::log(__METHOD__ . '  msgs: ' . print_r($msgs, true));
         return $msgs;
     }
@@ -293,10 +294,12 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _createAggregatedHeading($aggregator) {
 
         $heading = sprintf('<div class="promo_error_heading">%s</div>',
-            Mage::helper('hackathon_promocodemessages')->__('All of the following conditions must be met:'));
+            Mage::helper('hackathon_promocodemessages')
+                ->__('In addition, all of the following conditions must be met:'));
         if ($aggregator == 'any') {
             $heading = sprintf('<div class="promo_error_heading">%s</div>',
-                Mage::helper('hackathon_promocodemessages')->__('At least one of the following conditions must be met:'));
+                Mage::helper('hackathon_promocodemessages')
+                    ->__('In addition, at least one of the following conditions must be met:'));
         }
         return $heading;
     }
