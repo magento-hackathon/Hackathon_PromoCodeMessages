@@ -208,46 +208,16 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _validateConditions($rule)
     {
         $conditions = $this->_getConditions($rule);
-        //Mage::log(__METHOD__ . ' conditions: ' . print_r($conditions, true));
         $msgs = array();
 
         foreach ($conditions as $condition) {
             $msgs = array_merge($msgs, $this->_processCondition($condition));
         }
         if (count($msgs) > 0) {
-            //Mage::log(__METHOD__ . '  msgs: ' . print_r($msgs, true));
             $errorMsgs = $this->_multi_implode('', $msgs);
             Mage::throwException($this->_formatMessage($errorMsgs));
         }
     }
-
-//    protected function _processCondition($condition)
-//    {
-//        $msgs = array();
-//        $msg = $this->_processRule($condition);
-//        if (!is_null($msg)) {
-//            $msgs[] = $msg;
-//        }
-//        $aggregatedOnly = ($msg == null); // Some rules consist of aggregated conditions only
-//
-//        // aggregate conditions
-//        if (isset($condition['aggregator']) && isset($condition['conditions'])) {
-//            $headingMsg = $this->_createAggregatedHeading($condition['aggregator'], $aggregatedOnly);
-//            $msgs[] = $headingMsg;
-//            $subMsgs = array();
-//            $subConditions = $condition['conditions'];
-//            foreach ($subConditions as $subCondition) {
-//                $subMsg = $this->_processRule($subCondition);
-//                if (!is_null($subMsg)) {
-//                    $subMsgs[] = $subMsg;
-//                }
-//            }
-//            $msgs[] = $subMsgs;
-//        }
-//        Mage::log(__METHOD__ . '  msgs: ' . print_r($msgs, true));
-//
-//        return $msgs;
-//    }
 
 
     /**
@@ -272,11 +242,10 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $subMsgs = array();
             $subConditions = $condition['conditions'];
             foreach ($subConditions as $subCondition) {
-                    $subMsgs[] = $this->_processCondition($subCondition);
+                $subMsgs[] = $this->_processCondition($subCondition);
             }
             $msgs[] = $subMsgs;
         }
-        Mage::log(__METHOD__ . '  msgs: ' . print_r($msgs, true));
 
         return $msgs;
     }
