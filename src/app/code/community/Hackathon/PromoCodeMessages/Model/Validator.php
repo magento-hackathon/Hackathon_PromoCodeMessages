@@ -47,6 +47,17 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
+     * Rule-specific attributes that use price. Note that product attribute type is determined dynamically.
+     * @var array
+     */
+    protected $_currency_attributes = array(
+        'base_subtotal',
+        'base_row_total',
+        'quote_item_price',
+        'quote_item_row_total',
+    );
+
+    /**
      * Main entry point.
      * @param $couponCode
      * @param Mage_Sales_Model_Quote $quote
@@ -197,8 +208,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
     /**
      * Validate conditions in the "Conditions" tab of sales rule admin.
-     * TODO: format currency
-     * TODO: refactor to reduce code duplication
+     * TODO: conditions array could have multiple layers of subconditions
      *
      * @param Mage_SalesRule_Model_Rule $rule
      * @return string
@@ -206,6 +216,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _validateConditions($rule)
     {
         $conditions = $this->_getConditions($rule);
+        Mage::log(__METHOD__ . ' conditions: ' . print_r($conditions, true));
         $headingMsg = '';
         $msgs = array();
 
@@ -216,25 +227,18 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             if ($type == 'salesrule/rule_condition_address') {
                 $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
             }
-            elseif ($type == 'salesrule/rule_condition_product_found') {
-                // this rule type has subconditions
+            // this rule type has subconditions
+            elseif ($type == 'salesrule/rule_condition_product_found' || $type == 'salesrule/rule_condition_combine') {
                 $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
                 $subConditions = $condition['conditions'];
                 foreach ($subConditions as $subCondition) {
                     $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
                 }
             }
+            // this rule type has a condition AND subconditions
             elseif ($type == 'salesrule/rule_condition_product_subselect') {
-                // this rule type has a condition AND subconditions
                 $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
                 $msgs = array_merge($msgs, $this->_processRuleTypes($condition));
-                $subConditions = $condition['conditions'];
-                foreach ($subConditions as $subCondition) {
-                    $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
-                }
-            }
-            elseif ($type == 'salesrule/rule_condition_combine') {
-                $headingMsg = $this->_createAggregatedHeading($condition['aggregator']);
                 $subConditions = $condition['conditions'];
                 foreach ($subConditions as $subCondition) {
                     $msgs = array_merge($msgs, $this->_processRuleTypes($subCondition));
@@ -271,6 +275,8 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     /**
      * Gets details from the given rule condition and matches against operator.
      *
+     * TODO: cleanup a bit
+     *
      * @param array $condition
      * @throws Mage_Core_Exception
      */
@@ -281,8 +287,10 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $value = $condition['value'];
         $type = $condition['type'];
         $ruleType = Mage::getModel($type);
+        $isCurrency = in_array($attribute, $this->_currency_attributes);
         $msgs = array();
 
+        // handle categories
         if ($attribute == 'category_ids') {
             $categoryIds = explode(',', $value);
             $values = array();
@@ -292,13 +300,19 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             }
             $value = implode(', ', $values);
         }
+
+        // product attributes
         if ($type == 'salesrule/rule_condition_product') {
-            // load attribute; it may have a source model where we'll need the store display value
             $attributeModel = Mage::getModel('eav/entity_attribute')
                 ->loadByCode(Mage_Catalog_Model_Product::ENTITY, $attribute);
             $storeId = Mage::app()->getStore()->getStoreId();
 
-            // attribute has a source model
+            // determine if we should format currency
+            if ($attributeModel->getBackendModel() == 'catalog/product_attribute_backend_price') {
+                $isCurrency = true;
+            }
+
+            // attribute may use a source model
             if ($attributeModel->usesSource()) {
                 $attributeId = $attributeModel->getAttributeId();
                 $collection = Mage::getResourceModel('eav/entity_attribute_option_collection') // TODO: better way?
@@ -312,11 +326,14 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             }
         }
 
+        // Loop through operators looking for a match
         foreach ($this->_getOperators() as $operatorCode => $operatorText) {
             if ($operatorCode == $operator) {
+                // get the rule attributes and their values
                 $attributeOptions = $ruleType->getAttributeOption();
                 foreach ($attributeOptions as $attributeOptionCode => $attributeOptionText) {
                     if ($attribute == $attributeOptionCode) {
+                        $value = $isCurrency ? Mage::helper('core')->currency($value,true,false) : $value;
                         $msg = sprintf('%s %s <em>%s</em>.', $attributeOptionText, $operatorText, $value);
                         $msgs[] = $msg;
                         break;
