@@ -233,12 +233,11 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if (!is_null($msg)) {
             $msgs[] = $msg;
         }
-        $aggregatedOnly = $msg == null; // Some rules consist of aggregated conditions only
 
         // aggregate conditions
         if (isset($condition['aggregator']) && isset($condition['conditions'])) {
             $headingMsg = sprintf('<li class="promo_error_heading">%s<ul>',
-                $this->_createAggregatedHeading($condition['aggregator'], $aggregatedOnly));
+                $this->_createAggregatedHeading($condition['aggregator']));
             $msgs[] = $headingMsg;
             $subMsgs = array();
             $subConditions = $condition['conditions'];
@@ -340,28 +339,15 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * @param bool $aggregatedOnly False if the heading is in addition to existing error messages
      * @return String containing aggregate heading
      */
-    protected function _createAggregatedHeading($aggregator, $aggregatedOnly = true)
+    protected function _createAggregatedHeading($aggregator)
     {
-
-        if ($aggregatedOnly) {
-            if ($aggregator == 'any') {
-                $heading = sprintf('%s',
-                    $this->_helper->__('At least one of the following conditions must be met:'));
-            }
-            else {
-                $heading = sprintf('%s',
-                    $this->_helper->__('All of the following conditions must be met:'));
-            }
+        if ($aggregator == 'any') {
+            $heading = sprintf('%s',
+                $this->_helper->__('At least one of the following conditions must be met:'));
         }
         else {
-            if ($aggregator == 'any') {
-                $heading = sprintf('%s',
-                    $this->_helper->__('In addition, at least one of the following conditions must be met:'));
-            }
-            else {
-                $heading = sprintf('%s',
-                    $this->_helper->__('In addition, all of the following conditions must be met:'));
-            }
+            $heading = sprintf('%s',
+                $this->_helper->__('All of the following conditions must be met:'));
         }
 
         return $heading;
