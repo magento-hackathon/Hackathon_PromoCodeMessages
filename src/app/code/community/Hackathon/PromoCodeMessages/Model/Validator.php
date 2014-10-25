@@ -108,30 +108,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
-     * Tranlsate the message.
-     *
-     * @param string $message
-     * @param string $params
-     * @param string $internalMessage
-     * @return string
-     */
-    protected function _formatMessage($message, $params = '', $internalMessage = null)
-    {
-        $message = sprintf('<div class="promo_error_message">%s</div>',
-            $this->_helper->__($message, $params));
-
-        if (!is_null($internalMessage) &&
-            Mage::getStoreConfigFlag('checkout/promocodemessages/add_additional_info_on_frontend')
-        ) {
-            $message .= sprintf('<div class="promo_error_additional">%s</div>',
-                $this->_helper->__($internalMessage, $params));
-        }
-
-        return $message;
-    }
-
-
-    /**
      * Validates conditions in the "Rule Information" tab of sales rule admin.
      *
      * @param Mage_SalesRule_Model_Rule $rule
@@ -245,15 +221,49 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
     }
 
+//    protected function _processCondition($condition)
+//    {
+//        $msgs = array();
+//        $msg = $this->_processRule($condition);
+//        if (!is_null($msg)) {
+//            $msgs[] = $msg;
+//        }
+//        $aggregatedOnly = ($msg == null); // Some rules consist of aggregated conditions only
+//
+//        // aggregate conditions
+//        if (isset($condition['aggregator']) && isset($condition['conditions'])) {
+//            $headingMsg = $this->_createAggregatedHeading($condition['aggregator'], $aggregatedOnly);
+//            $msgs[] = $headingMsg;
+//            $subMsgs = array();
+//            $subConditions = $condition['conditions'];
+//            foreach ($subConditions as $subCondition) {
+//                $subMsg = $this->_processRule($subCondition);
+//                if (!is_null($subMsg)) {
+//                    $subMsgs[] = $subMsg;
+//                }
+//            }
+//            $msgs[] = $subMsgs;
+//        }
+//        Mage::log(__METHOD__ . '  msgs: ' . print_r($msgs, true));
+//
+//        return $msgs;
+//    }
 
-    protected function _processCondition($condition)
+
+    /**
+     * Process a single condition. The given condition may have subconditions, so function is recursive until it's
+     * complete.
+     * @param array $condition
+     * @return array
+     */
+    protected function _processCondition($condition = array())
     {
         $msgs = array();
         $msg = $this->_processRule($condition);
-        $aggregatedOnly = $msg == null; // Some rules consist of aggregated conditions only
-        if (!$aggregatedOnly) {
+        if (!is_null($msg)) {
             $msgs[] = $msg;
         }
+        $aggregatedOnly = $msg == null; // Some rules consist of aggregated conditions only
 
         // aggregate conditions
         if (isset($condition['aggregator']) && isset($condition['conditions'])) {
@@ -262,10 +272,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $subMsgs = array();
             $subConditions = $condition['conditions'];
             foreach ($subConditions as $subCondition) {
-                $subMsg = $this->_processRule($subCondition);
-                if (!is_null($subMsg)) {
-                    $subMsgs[] = $subMsg;
-                }
+                    $subMsgs[] = $this->_processCondition($subCondition);
             }
             $msgs[] = $subMsgs;
         }
@@ -281,6 +288,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * TODO: cleanup a bit
      *
      * @param array $condition
+     * @return String containing error message
      * @throws Mage_Core_Exception
      */
     protected function _processRule($condition = array())
@@ -358,8 +366,8 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * Setup a heading for aggregated rule conditions.
      *
      * @param String $aggregator "any" or "all"
-     * @param bool $aggregatedOnly False if the heading is in addition to existing error messages.
-     * @return mixed
+     * @param bool $aggregatedOnly False if the heading is in addition to existing error messages
+     * @return String containing aggregate heading
      */
     protected function _createAggregatedHeading($aggregator, $aggregatedOnly = true)
     {
@@ -386,6 +394,30 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
 
         return $heading;
+    }
+
+
+    /**
+     * Tranlsate the message.
+     *
+     * @param string $message
+     * @param string $params
+     * @param string $internalMessage
+     * @return string containing entire error message
+     */
+    protected function _formatMessage($message, $params = '', $internalMessage = null)
+    {
+        $message = sprintf('<div class="promo_error_message">%s</div>',
+            $this->_helper->__($message, $params));
+
+        if (!is_null($internalMessage) &&
+            Mage::getStoreConfigFlag('checkout/promocodemessages/add_additional_info_on_frontend')
+        ) {
+            $message .= sprintf('<div class="promo_error_additional">%s</div>',
+                $this->_helper->__($internalMessage, $params));
+        }
+
+        return $message;
     }
 
 
@@ -423,6 +455,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
+     * Unserialize the conditions from the rule.
      * @param Mage_SalesRule_Model_Rule $rule
      * @return Array of rule conditions
      */
