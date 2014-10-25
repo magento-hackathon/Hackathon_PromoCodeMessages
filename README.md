@@ -34,7 +34,6 @@ Each message is wrapped in a class to use for styling:
 
 ToDo
 ----
-- handle currency formatting
 - actions
 - functional tests
 
