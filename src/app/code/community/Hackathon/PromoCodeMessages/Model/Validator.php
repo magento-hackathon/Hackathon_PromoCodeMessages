@@ -272,7 +272,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $type = $condition['type'];
         $ruleType = Mage::getModel($type);
         $isCurrency = in_array($attribute, $this->_currency_attributes);
-        $msgs = array();
         $msg = null;
 
         // categories
@@ -320,7 +319,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                     if ($attribute == $attributeOptionCode) {
                         $value = $isCurrency ? Mage::helper('core')->currency($value, true, false) : $value;
                         $msg = sprintf('%s %s <em>%s</em>.', $attributeOptionText, $operatorText, $value);
-                        $msgs[] = $msg;
                         break;
                     }
                 }

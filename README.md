@@ -13,7 +13,7 @@ Options
 There are two system configuration options under Sales -> Checkout -> Promo Code Error Messages. You can display 
 additional information about the error (for example, if the customer is not in the correct group for the rule, you can
 display the required groups). In addition, error messaging for the more complex condition-based rules can be turned off.
-This part is still under active development.
+
 
 Translations
 ------------
