@@ -32,6 +32,7 @@ Each message is wrapped in a class to use for styling:
 
 **promo_error_item:** Used in conjunction with *promo_error_heading*; wraps each condition required for the promo code.
 
+There is a CSS file that will indent nested messages included.
 
 ToDo
 ----
