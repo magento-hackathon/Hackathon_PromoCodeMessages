@@ -32,11 +32,6 @@ Each message is wrapped in a class to use for styling:
 
 **promo_error_item:** Used in conjunction with *promo_error_heading*; wraps each condition required for the promo code.
 
-**Note:** In order for the nested messages to display properly, you should add the following line to your CSS:
-
-```
-.promo_error_message ul  { padding:0 0 0 1em !important; }
-```
 
 ToDo
 ----

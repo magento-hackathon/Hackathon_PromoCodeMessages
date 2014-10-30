@@ -46,6 +46,14 @@
                 </Hackathon_PromoCodeMessages>
             </modules>
         </translate>
+
+        <layout>
+            <updates>
+                <hackathon_promocodemessages>
+                    <file>hackathon/promocodemessages.xml</file>
+                </hackathon_promocodemessages>
+            </updates>
+        </layout>
     </frontend>
 
     <default>
