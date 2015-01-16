@@ -94,7 +94,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         // no coupon
         if (!$coupon->getId()) {
-            Mage::throwException($this->_formatMessage('Code does not exist.'));
+            Mage::throwException($this->_formatMessage('Coupon code does not exist.'));
         }
 
         /** @var $rule Mage_SalesRule_Model_Rule */
