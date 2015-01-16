@@ -59,6 +59,7 @@
     <default>
         <checkout>
             <promocodemessages>
+                <enabled>0</enabled>
                 <add_additional_info_on_frontend>0</add_additional_info_on_frontend>
                 <include_conditions>0</include_conditions>
             </promocodemessages>
