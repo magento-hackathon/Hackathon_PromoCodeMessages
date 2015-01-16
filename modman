@@ -1,4 +1,6 @@
 src/app/code/community/Hackathon/PromoCodeMessages              app/code/community/Hackathon/PromoCodeMessages
+src/design/frontend/base/default/layout/hackathon               design/frontend/base/default/layout/hackathon
 src/app/etc/modules/Hackathon_PromoCodeMessages.xml             app/etc/modules/Hackathon_PromoCodeMessages.xml
 src/app/locale/de_DE/Hackathon_PromoCodeMessages.csv            app/locale/de_DE/Hackathon_PromoCodeMessages.csv
 src/app/locale/en_US/Hackathon_PromoCodeMessages.csv            app/locale/en_US/Hackathon_PromoCodeMessages.csv
+src/skin/frontend/base/default/css/hackathon                    skin/frontend/base/default/css/hackathon
