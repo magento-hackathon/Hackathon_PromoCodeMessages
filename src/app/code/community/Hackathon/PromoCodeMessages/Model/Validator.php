@@ -170,6 +170,15 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             }
         }
 
+        // magemail coupon-level auto-expiration date
+        if ($coupon->getdata('magemail_expired_at') && $coupon->getUsageLimit() && $coupon->getTimesUsed() >= $coupon->getUsageLimit()) {
+            $expirationDate = new Zend_Date($coupon->getdata('magemail_expired_at'), Varien_Date::DATE_INTERNAL_FORMAT);
+            Mage::throwException($this->_formatMessage(
+                'Your coupon expired on %s',
+                Mage::helper('core')->formatDate($expirationDate)
+            ));
+        }
+
         // check global usage limit
         if ($coupon->getUsageLimit() && $coupon->getTimesUsed() >= $coupon->getUsageLimit()) {
             Mage::throwException($this->_formatMessage(
