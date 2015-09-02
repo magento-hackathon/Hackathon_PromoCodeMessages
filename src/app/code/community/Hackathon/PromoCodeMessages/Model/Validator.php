@@ -305,14 +305,14 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         // categories
         if ($attribute == 'category_ids') {
             $categoryIds = explode(',', $value);
-            $values = array();
 
-            //get collection and filter by cat ids
+            // get collection and filter by cat ids
             $catCollection = Mage::getModel('catalog/category')->getCollection();
             $catCollection->addAttributeToFilter('entity_id', array('in' => $categoryIds));
+            $catCollection->addAttributeToSelect('name');
 
-            $categoryIds = $catCollection->load()->getColumnValues('name');
-            $value = implode(', ', $categoryIds);
+            $categories = $catCollection->load()->getColumnValues('name');
+            $value = implode(', ', $categories);
         }
 
         // product attributes
@@ -329,15 +329,16 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             // attribute may use a source model
             if ($attributeModel->usesSource()) {
                 $attributeId = $attributeModel->getAttributeId();
-                $collection = Mage::getResourceModel('eav/entity_attribute_option_collection')// TODO: better way?
-                ->setAttributeFilter($attributeId)
+                $collection = Mage::getResourceModel('eav/entity_attribute_option_collection')
+                    ->setAttributeFilter($attributeId)
                     ->setStoreFilter($storeId, false)
-                    ->addFieldToFilter('tsv.option_id', array('in' => $value))
+                    ->addFieldToFilter('tsv.option_id', array('in' => $value));
+                $collection
                     ->getSelect()
                     ->limit(1);
 
                 if ($collection->getSize()) {
-                    $value = $collection->getResource()->fetchOne($collection->getSelect());
+                    $value = $collection->getFirstItem()->getValue();
                 }
             }
         }
