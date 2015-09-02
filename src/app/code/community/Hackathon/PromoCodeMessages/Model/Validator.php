@@ -238,7 +238,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $msgs = array_merge($msgs, $this->_processCondition($condition));
         }
         if (count($msgs) > 0) {
-            $errorMsgs = $this->_multi_implode('', $msgs);
+            $errorMsgs = $this->_multiImplode('', $msgs);
             Mage::throwException($this->_formatMessage($errorMsgs));
         }
     }
@@ -329,8 +329,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                     ->setStoreFilter($storeId, false)
                     ->addFieldToFilter('tsv.option_id', array('in' => $value));
                 if ($collection->getSize() > 0) {
-                    $item = $collection->getFirstItem();
-                    $value = $item->getValue();
+                    $value = $collection->getFirstItem()->getValue();
                 }
             }
         }
@@ -359,7 +358,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * Setup a heading for aggregated rule conditions.
      *
      * @param String $aggregator "any" or "all"
-     * @param bool $aggregatedOnly False if the heading is in addition to existing error messages
      * @return String containing aggregate heading
      */
     protected function _createAggregatedHeading($aggregator)
@@ -408,13 +406,13 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * @param $array
      * @return string
      */
-    protected function _multi_implode($glue, $array)
+    protected function _multiImplode($glue, $array)
     {
         $ret = '';
 
         foreach ($array as $item) {
             if (is_array($item)) {
-                $ret .= $this->_multi_implode($glue, $item) . $glue;
+                $ret .= $this->_multiImplode($glue, $item) . $glue;
             }
             else {
                 $ret .= $item . $glue;
