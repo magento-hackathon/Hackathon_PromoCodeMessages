@@ -155,7 +155,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             if ($now->isEarlier($fromDate)) {
                 Mage::throwException($this->_formatMessage(
                     'Your coupon is not valid yet. It will be active on %s.',
-                    Mage::helper('core')->formatDate($fromDate),
+                    Mage::helper('core')->formatDate($fromDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG),
                     ''
                 ));
             }
@@ -167,7 +167,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             if ($now->isLater($toDate)) {
                 Mage::throwException($this->_formatMessage(
                     'Your coupon is no longer valid. It expired on %s.',
-                    Mage::helper('core')->formatDate($toDate),
+                    Mage::helper('core')->formatDate($toDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG),
                     ''
                 ));
             }
