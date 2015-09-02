@@ -146,10 +146,13 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             ));
         }
 
+        // check dates
+        $now = new Zend_Date(Mage::getModel('core/date')->timestamp(time()), Zend_Date::TIMESTAMP);
+
         // check from date
         if ($rule->getFromDate()) {
             $fromDate = new Zend_Date($rule->getFromDate(), Varien_Date::DATE_INTERNAL_FORMAT);
-            if (Zend_Date::now()->isEarlier($fromDate)) {
+            if ($now->isEarlier($fromDate)) {
                 Mage::throwException($this->_formatMessage(
                     'Your coupon is not valid yet. It will be active on %s.',
                     Mage::helper('core')->formatDate($fromDate),
@@ -161,7 +164,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         // check to date
         if ($rule->getToDate()) {
             $toDate = new Zend_Date($rule->getToDate(), Varien_Date::DATE_INTERNAL_FORMAT);
-            if (Zend_Date::now()->isLater($toDate)) {
+            if ($now->isLater($toDate)) {
                 Mage::throwException($this->_formatMessage(
                     'Your coupon is no longer valid. It expired on %s.',
                     Mage::helper('core')->formatDate($toDate),
