@@ -349,7 +349,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * Setup a heading for aggregated rule conditions.
      *
      * @param String $aggregator "any" or "all"
-     * @param bool $aggregatedOnly False if the heading is in addition to existing error messages
      * @return String containing aggregate heading
      */
     protected function _createAggregatedHeading($aggregator)
