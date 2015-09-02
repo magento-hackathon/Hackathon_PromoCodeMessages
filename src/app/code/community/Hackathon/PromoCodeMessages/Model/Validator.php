@@ -329,9 +329,12 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 $collection = Mage::getResourceModel('eav/entity_attribute_option_collection')// TODO: better way?
                 ->setAttributeFilter($attributeId)
                     ->setStoreFilter($storeId, false)
-                    ->addFieldToFilter('tsv.option_id', array('in' => $value));
-                if ($collection->getSize() > 0) {
-                    $value = $collection->getFirstItem()->getValue();
+                    ->addFieldToFilter('tsv.option_id', array('in' => $value))
+                    ->getSelect()
+                    ->limit(1);
+
+                if ($collection->getSize()) {
+                    $value = $collection->getResource()->fetchOne($collection->getSelect());
                 }
             }
         }
