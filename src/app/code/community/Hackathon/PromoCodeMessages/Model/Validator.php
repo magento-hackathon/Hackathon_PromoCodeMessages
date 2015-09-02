@@ -146,13 +146,16 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             ));
         }
 
+        // check dates
+        $now = new Zend_Date(Mage::getModel('core/date')->timestamp(time()), Zend_Date::TIMESTAMP);
+
         // check from date
         if ($rule->getFromDate()) {
             $fromDate = new Zend_Date($rule->getFromDate(), Varien_Date::DATE_INTERNAL_FORMAT);
-            if (Zend_Date::now()->isEarlier($fromDate)) {
+            if ($now->isEarlier($fromDate)) {
                 Mage::throwException($this->_formatMessage(
                     'Your coupon is not valid yet. It will be active on %s.',
-                    Mage::helper('core')->formatDate($fromDate),
+                    Mage::helper('core')->formatDate($fromDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG),
                     ''
                 ));
             }
@@ -161,10 +164,10 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         // check to date
         if ($rule->getToDate()) {
             $toDate = new Zend_Date($rule->getToDate(), Varien_Date::DATE_INTERNAL_FORMAT);
-            if (Zend_Date::now()->isLater($toDate)) {
+            if ($now->isLater($toDate)) {
                 Mage::throwException($this->_formatMessage(
                     'Your coupon is no longer valid. It expired on %s.',
-                    Mage::helper('core')->formatDate($toDate),
+                    Mage::helper('core')->formatDate($toDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG),
                     ''
                 ));
             }
@@ -302,14 +305,14 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         // categories
         if ($attribute == 'category_ids') {
             $categoryIds = explode(',', $value);
-            $values = array();
 
-            //get collection and filter by cat ids
+            // get collection and filter by cat ids
             $catCollection = Mage::getModel('catalog/category')->getCollection();
             $catCollection->addAttributeToFilter('entity_id', array('in' => $categoryIds));
+            $catCollection->addAttributeToSelect('name');
 
-            $categoryIds = $catCollection->load()->getColumnValues('name');
-            $value = implode(', ', $categoryIds);
+            $categories = $catCollection->load()->getColumnValues('name');
+            $value = implode(', ', $categories);
         }
 
         // product attributes
@@ -326,15 +329,16 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             // attribute may use a source model
             if ($attributeModel->usesSource()) {
                 $attributeId = $attributeModel->getAttributeId();
-                $collection = Mage::getResourceModel('eav/entity_attribute_option_collection')// TODO: better way?
-                ->setAttributeFilter($attributeId)
+                $collection = Mage::getResourceModel('eav/entity_attribute_option_collection')
+                    ->setAttributeFilter($attributeId)
                     ->setStoreFilter($storeId, false)
-                    ->addFieldToFilter('tsv.option_id', array('in' => $value))
+                    ->addFieldToFilter('tsv.option_id', array('in' => $value));
+                $collection
                     ->getSelect()
                     ->limit(1);
 
                 if ($collection->getSize()) {
-                    $value = $collection->getResource()->fetchOne($collection->getSelect());
+                    $value = $collection->getFirstItem()->getValue();
                 }
             }
         }
