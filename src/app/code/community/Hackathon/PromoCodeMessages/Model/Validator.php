@@ -303,11 +303,13 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($attribute == 'category_ids') {
             $categoryIds = explode(',', $value);
             $values = array();
-            foreach ($categoryIds as $categoryId) {
-                $category = Mage::getModel('catalog/category')->load($categoryId);
-                $values[] = $category->getName();
-            }
-            $value = implode(', ', $values);
+
+            //get collection and filter by cat ids
+            $catCollection = Mage::getModel('catalog/category')->getCollection();
+            $catCollection->addAttributeToFilter('entity_id', array('in' => $categoryIds));
+
+            $categoryIds = $catCollection->load()->getColumnValues('name');
+            $value = implode(', ', $categoryIds);
         }
 
         // product attributes
