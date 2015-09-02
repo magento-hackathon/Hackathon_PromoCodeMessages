@@ -303,11 +303,13 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($attribute == 'category_ids') {
             $categoryIds = explode(',', $value);
             $values = array();
-            foreach ($categoryIds as $categoryId) {
-                $category = Mage::getModel('catalog/category')->load($categoryId);
-                $values[] = $category->getName();
-            }
-            $value = implode(', ', $values);
+
+            //get collection and filter by cat ids
+            $catCollection = Mage::getModel('catalog/category')->getCollection();
+            $catCollection->addAttributeToFilter('entity_id', array('in' => $categoryIds));
+
+            $categoryIds = $catCollection->load()->getColumnValues('name');
+            $value = implode(', ', $categoryIds);
         }
 
         // product attributes
@@ -327,9 +329,12 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 $collection = Mage::getResourceModel('eav/entity_attribute_option_collection')// TODO: better way?
                 ->setAttributeFilter($attributeId)
                     ->setStoreFilter($storeId, false)
-                    ->addFieldToFilter('tsv.option_id', array('in' => $value));
-                if ($collection->getSize() > 0) {
-                    $value = $collection->getFirstItem()->getValue();
+                    ->addFieldToFilter('tsv.option_id', array('in' => $value))
+                    ->getSelect()
+                    ->limit(1);
+
+                if ($collection->getSize()) {
+                    $value = $collection->getResource()->fetchOne($collection->getSelect());
                 }
             }
         }
