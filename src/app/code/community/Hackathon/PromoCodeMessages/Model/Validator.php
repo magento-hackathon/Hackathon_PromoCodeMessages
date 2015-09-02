@@ -175,7 +175,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($coupon->getdata('magemail_expired_at') && $isCouponAlreadyUsed) {
             $expirationDate = Mage::getSingleton('core/date')->date('M d, Y', $coupon->getdata('magemail_expired_at'));
             Mage::throwException($this->_formatMessage(
-                'Your coupon expired on %s',
+                'Your coupon is no longer valid. It expired on %s.',
                 $expirationDate
             ));
         }
