@@ -40,6 +40,14 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
 
     /**
+     * Array of actions attached to the current rule.
+     *
+     * @var array
+     */
+    protected $_actions = array();
+
+
+    /**
      * Default values for possible operator options.
      *
      * @var array
@@ -103,6 +111,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $this->_validateGeneral($rule, $coupon);
         if (Mage::getStoreConfigFlag('checkout/promocodemessages/include_conditions')) {
             $this->_validateConditions($rule);
+            $this->_validateActions($rule);
         }
     }
 
@@ -242,6 +251,35 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
         if (count($msgs) > 0) {
             $errorMsgs = $this->_multiImplode('', $msgs);
+            Mage::throwException($this->_formatMessage($errorMsgs));
+        }
+    }
+
+
+    /**
+     * Validate conditions in the "Actions" tab of sales rule admin.
+     *
+     * @param Mage_SalesRule_Model_Rule $rule
+     * @return string
+     */
+    protected function _validateActions($rule)
+    {
+        $conditions = $this->_getActions($rule);
+        $msgs = array();
+
+        foreach ($conditions as $condition) {
+            $msgs = array_merge($msgs, $this->_processCondition($condition));
+        }
+        if (count($msgs) > 0) {
+
+            $newMsgs = array();
+            $headingMsg = sprintf('<li class="promo_error_heading">%s<ul>',
+                $this->_helper->__('Error applying rule to a particular cart item:'));
+            $newMsgs[] = $headingMsg;
+            $newMsgs[] = $msgs;
+            $newMsgs[] = '</ul></li>';
+            //array_unshift($msgs, 'Error applying rule to a particular cart item:');
+            $errorMsgs = $this->_multiImplode('', $newMsgs);
             Mage::throwException($this->_formatMessage($errorMsgs));
         }
     }
@@ -459,6 +497,26 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
 
         return $this->_conditions;
+    }
+
+
+    /**
+     * Unserialize the actions from the rule.
+     * @param $rule
+     * @return array
+     */
+    protected function _getActions($rule)
+    {
+        if (count($this->_actions) == 0) {
+            if ($rule->getId()) {
+                $data = unserialize($rule->getData('actions_serialized'));
+                if (isset($data['conditions'])) {
+                    $this->_actions = $data['conditions'];
+                }
+            }
+        }
+
+        return $this->_actions;
     }
 
 
