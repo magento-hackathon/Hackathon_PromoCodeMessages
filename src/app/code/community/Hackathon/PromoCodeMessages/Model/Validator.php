@@ -475,7 +475,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 '==' => $this->_helper->__('must be'),
                 '!=' => $this->_helper->__('must not be'),
                 '>=' => $this->_helper->__('must be equal or greater than'),
-                '<=' => $this->_helper->__('must be  equal or less than'),
+                '<=' => $this->_helper->__('must be equal or less than'),
                 '>' => $this->_helper->__('must be greater than'),
                 '<' => $this->_helper->__('must be less than'),
                 '{}' => $this->_helper->__('must contain'),
