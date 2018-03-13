@@ -163,7 +163,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         // check to date
         if ($rule->getToDate()) {
-            $toDate = new Zend_Date($rule->getToDate(), Varien_Date::DATE_INTERNAL_FORMAT);
+            $toDate = new Zend_Date($rule->getToDate() . ' 23:59:59', Varien_Date::DATE_INTERNAL_FORMAT);
             if ($now->isLater($toDate, Zend_Date::DATE_MEDIUM)) {
                 Mage::throwException($this->_formatMessage(
                     'Your coupon is no longer valid. It expired on %s.',
