@@ -188,7 +188,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             Mage::throwException($this->_formatMessage(
                 'Your coupon was already used.',
                 $coupon->getUsageLimit(),
-                sprintf('It may only be used %s time(s).', $coupon->getUsageLimit())
+                'It may only be used %s time(s).'
             ));
         }
         // check per customer usage limit
@@ -202,8 +202,8 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             ) {
                 Mage::throwException($this->_formatMessage(
                     'You have already used your coupon.',
-                    $coupon->getUsageLimit(),
-                    sprintf('It may only be used %s time(s).', $coupon->getUsagePerCustomer())
+                    $coupon->getUsagePerCustomer(),
+                    'It may only be used %s time(s).'
                 ));
             }
         }
@@ -217,8 +217,8 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 if ($ruleCustomer->getTimesUsed() >= $rule->getUsesPerCustomer()) {
                     Mage::throwException($this->_formatMessage(
                         'You have already used your coupon.',
-                        $coupon->getUsageLimit(),
-                        sprintf('It may only be used %s time(s).', $coupon->getUsagePerCustomer())
+                        $rule->getUsesPerCustomer(),
+                        'It may only be used %s time(s).'
                     ));
                 }
             }
