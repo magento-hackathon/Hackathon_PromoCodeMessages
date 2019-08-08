@@ -3,8 +3,10 @@ src/.idea
 .DS_Store
 
 # remove these when done
-src/*
-src/dev
+#src/*
+src/dev/.htaccess
+src/dev/tests/functional
+!src/dev/tests/hackathon
 src/downloader
 src/errors
 src/includes
@@ -24,7 +26,7 @@ src/app/design/frontend/base/layout
 !src/app/design/frontend/base/layout/hackathon
 src/app/design/frontend/default
 src/app/design/frontend/rwd
-src/app/design/frontend/install
+src/app/design/install
 
 src/app/etc/*
 src/app/etc/modules
@@ -36,3 +38,12 @@ src/app/locale/en_US
 src/app/.htaccess
 src/app/bootstrap.php
 src/app/Mage.php
+
+src/*.php
+src/*.html
+src/*.txt
+src/*.sample
+src/.htaccess
+src/cron.sh
+src/favicon.ico
+src/mage
