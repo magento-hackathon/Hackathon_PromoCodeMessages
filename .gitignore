@@ -1,9 +1,10 @@
 src/.idea
 .idea
 .DS_Store
+vendor/
 
 # remove these when done
-#src/*
+composer.lock
 src/dev/.htaccess
 src/dev/tests/functional
 !src/dev/tests/hackathon
