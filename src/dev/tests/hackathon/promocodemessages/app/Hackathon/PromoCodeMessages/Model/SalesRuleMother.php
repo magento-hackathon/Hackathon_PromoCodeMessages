@@ -26,9 +26,7 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
 
     public static function generateRule()
     {
-        $rule = self::setupBaseRule()->save();
-
-        return $rule;
+        return self::setupBaseRule()->save();
     }
 
     /**
@@ -37,40 +35,27 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
      */
     public static function generateInactiveRule()
     {
-        $rule = self::setupBaseRule();
-        $rule->setIsActive(false)->setName('Inactive rule')->save();
-
-        return $rule;
+        return self::setupBaseRule()->setIsActive(false)->save();
     }
 
     public static function generateExpiredRule()
     {
-        $rule = self::setupBaseRule();
-        $rule->setToDate('2010-01-01')->setName('Expired rule')->save();
-
-        return $rule;
+        return self::setupBaseRule()->setToDate('2010-01-01')->save();
     }
 
     public static function generateNotYetActiveRule()
     {
-        $rule = self::setupBaseRule();
-        $rule->setFromDate('2030-01-01')->setName('Not yet active rule')->save();
-
-        return $rule;
+        return self::setupBaseRule()->setFromDate('2030-01-01')->save();
     }
 
     public static function generateCustomerGroupIdRule()
     {
-        $rule = self::setupBaseRule();
-        $rule->setCustomerGroupIds('1')->setName('Customer groups')->save();
-
-        return $rule;
+        return self::setupBaseRule()->setCustomerGroupIds('1')->save();
     }
 
     public static function generateMageMailExpireRule()
     {
-        $rule = self::setupBaseRule();
-        $rule->setName('MageMail')->save();
+        $rule = self::setupBaseRule()->save();
         $coupon = Mage::getModel('salesrule/coupon')->load($rule->getCouponCode(), 'code');
         // TODO: magemail_expired_at not persisting
         $coupon->setTimesUsed(1)->setData('magemail_expired_at', '2010-01-01')->save();
@@ -80,8 +65,7 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
 
     public static function generateGlobalAlreadyUsedRule()
     {
-        $rule = self::setupBaseRule();
-        $rule->setName('Global already used')->save();
+        $rule = self::setupBaseRule()->save();
         $coupon = Mage::getModel('salesrule/coupon')->load($rule->getCouponCode(), 'code');
         $coupon->setTimesUsed(1)->save();
 
@@ -90,13 +74,171 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
 
     public static function generateCustomerAlreadyUsedRule()
     {
-        $rule = self::setupBaseRule();
-        $rule->setName('MageMail')->save();
+        $rule = self::setupBaseRule()->save();
         $coupon = Mage::getModel('salesrule/coupon')->load($rule->getCouponCode(), 'code');
         $coupon->setTimesUsed(1)->save();
         $couponUsage = Mage::getResourceModel('salesrule/coupon_usage');
         $customer = Mage::getModel('customer/customer')->getCollection()->getFirstItem();
         $couponUsage->updateCustomerCouponTimesUsed($customer->getId(), $coupon->getId());
+
+        return $rule;
+    }
+
+    public static function generateAddressConditionSubtotalRule()
+    {
+        $rule = self::setupBaseRule();
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_address',
+                'attribute' => 'base_subtotal',
+                'operator' => '>=',
+                'value' => 1000
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
+    public static function generateAddressConditionTotalQtyRule()
+    {
+        $rule = self::setupBaseRule();
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_address',
+                'attribute' => 'total_qty',
+                'operator' => '==',
+                'value' => 5
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
+    public static function generateAddressConditionWeightRule()
+    {
+        $rule = self::setupBaseRule();
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_address',
+                'attribute' => 'weight',
+                'operator' => '>',
+                'value' => '5 lbs'
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
+    public static function generateAddressConditionPaymentMethodRule()
+    {
+        $rule = self::setupBaseRule();
+
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_address',
+                'attribute' => 'payment_method',
+                'operator' => '==',
+                'value' => 'checkmo'
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
+    public static function generateAddressConditionShippingMethodRule()
+    {
+        $rule = self::setupBaseRule();
+
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_address',
+                'attribute' => 'shipping_method',
+                'operator' => '==',
+                'value' => 'flatrate_flatrate'
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
+    public static function generateAddressConditionPostCodeRule()
+    {
+        $rule = self::setupBaseRule();
+
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_address',
+                'attribute' => 'postcode',
+                'operator' => '()',
+                'value' => '11215, 12346'
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
+    public static function generateAddressConditionRegionRule()
+    {
+        $rule = self::setupBaseRule();
+
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_address',
+                'attribute' => 'region',
+                'operator' => '==',
+                'value' => 'Quebec'
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
+    public static function generateAddressConditionRegionIdRule()
+    {
+        $rule = self::setupBaseRule();
+
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_address',
+                'attribute' => 'region_id',
+                'operator' => '==',
+                'value' => '1'
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
+    public static function generateAddressConditionCountryIdRule()
+    {
+        $rule = self::setupBaseRule();
+
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_address',
+                'attribute' => 'country_id',
+                'operator' => '==',
+                'value' => 'US'
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
 
         return $rule;
     }
@@ -202,6 +344,22 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
     }
 
     /**
+     * @return array
+     */
+    private static function generateRuleConditionCombineArray(): array
+    {
+        $conditions = [];
+        $conditions[1] = [
+            'type' => 'salesrule/rule_condition_combine',
+            'aggregator' => 'all',
+            'value' => "1",
+            'new_child' => ''
+        ];
+
+        return $conditions;
+    }
+
+    /**
      * @throws Exception
      */
     public function generateRuleOld1()
@@ -256,31 +414,39 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
             'value' => 200
         );
         //the constraints above are for 'Subtotal is equal or grater than 200'
-        //for 'equal or less than' set 'operator' to '<='... You get the idea other operators for numbers: '==', '!=', '>', '<'
+        //for 'equal or less than' set 'operator' to '<='... You get the idea other
+        // operators for numbers: '==', '!=', '>', '<'
         //for 'is one of' set operator to '()';
         //for 'is not one of' set operator to '!()';
         //in this example the constraint is on the subtotal
-        //for other attributes you can change the value for 'attribute' to: 'total_qty', 'weight', 'payment_method', 'shipping_method', 'postcode', 'region', 'region_id', 'country_id'
+        //for other attributes you can change the value for 'attribute' to:
+        // 'total_qty', 'weight', 'payment_method', 'shipping_method', 'postcode', 'region',
+        // 'region_id', 'country_id'
 
-        //to add an other constraint on product attributes (not cart attributes like above) uncomment and change the following:
-        /*
-        $conditions['1--2'] = array
-        (
-        'type' => 'salesrule/rule_condition_product_found',//-> means 'if all of the following are true' - same rules as above for 'aggregator' and 'value'
-        //other values for type: 'salesrule/rule_condition_product_subselect' 'salesrule/rule_condition_combine'
-        'value' => 1,
-        'aggregator' => 'all',
-        'new_child' => '',
-        );
+        //to add another constraint on product attributes (not cart attributes like above)
+        // uncomment and change the following:
 
-        $conditions['1--2--1'] = array
-        (
-        'type' => 'salesrule/rule_condition_product',
-        'attribute' => 'sku',
-        'operator' => '==',
-        'value' => '12',
-        );
-        */
+        $conditions['1--2'] =
+            [
+                'type' => 'salesrule/rule_condition_product_found',
+                //-> means 'if all of the following are true' - same rules as above for
+                // 'aggregator' and 'value'
+                // other values for type:
+                // 'salesrule/rule_condition_product_subselect'
+                // 'salesrule/rule_condition_combine'
+                'value' => 1,
+                'aggregator' => 'all',
+                'new_child' => '',
+            ];
+
+        $conditions['1--2--1'] =
+            [
+                'type' => 'salesrule/rule_condition_product',
+                'attribute' => 'sku',
+                'operator' => '==',
+                'value' => '12',
+            ];
+
         //$conditions['1--2--1'] means sku equals 12.
         // For other constraints change 'attribute', 'operator'(see list above), 'value'
 
@@ -289,7 +455,8 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         $labels = array();
         $labels[0] = 'Default store label';//default store label
         $labels[1] =
-            'Label for store with id 1'; //add one line for each store view you have. The key is the store view ID
+            'Label for store with id 1'; //add one line for each store view you have.
+        // The key is the store view ID
         $rule->setStoreLabels($labels);
 
         $rule->setCouponType(2);
