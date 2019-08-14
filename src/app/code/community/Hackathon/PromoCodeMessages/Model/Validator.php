@@ -74,7 +74,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     /**
      * Main entry point.
      *
-     * @param                        $couponCode
+     * @param string $couponCode
      * @param Mage_Sales_Model_Quote $quote
      * @return string
      * @throws Mage_Core_Exception
@@ -383,7 +383,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 $attributeOptions = $ruleType->getAttributeOption();
                 foreach ($attributeOptions as $attributeOptionCode => $attributeOptionText) {
                     if ($attribute == $attributeOptionCode) {
-                        $value = $isCurrency ? Mage::helper('core')->currency($value, true, false) : $value;
+                        $value = $this->getAttributeDisplayValue($attribute, $value, $isCurrency);
                         $msg = sprintf('%s %s <em>%s</em>.', $attributeOptionText, $operatorText, $value);
                         break;
                     }
@@ -531,5 +531,44 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
 
         return $this->_operators;
+    }
+
+    /**
+     * Look up attributes that use codes/IDs.
+     *
+     * @param string $attribute Attribute code
+     * @param string $value Attribute value
+     * @param bool $isCurrency
+     * @return mixed|string
+     */
+    protected function getAttributeDisplayValue($attribute, $value, $isCurrency)
+    {
+        switch ($attribute) {
+            case 'payment_method':
+                $paymentMethod = Mage::helper('payment')->getMethodInstance($value);
+                if ($paymentMethod) {
+                    $value = $paymentMethod->getTitle();
+                }
+                break;
+            case 'shipping_method':
+                // TODO: find out how promo rule admin gets shipping methods/rates
+                Mage::dispatchEvent('hackathon_promocode_error_messages_shipmethod', ['value' => $value]);
+                break;
+
+            case 'region_id':
+                $region = Mage::getModel('directory/region')->load($value);
+                $value = $region->getName();
+                break;
+
+            case 'country_id':
+                $country = Mage::getModel('directory/country')->loadByCode($value);
+                $value = $country->getName();
+                break;
+
+            default:
+                $value = $isCurrency ? Mage::helper('core')->currency($value, true, false) : $value;
+        }
+
+        return $value;
     }
 }
