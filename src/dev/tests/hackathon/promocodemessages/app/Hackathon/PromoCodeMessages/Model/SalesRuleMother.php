@@ -243,6 +243,60 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
+    public static function generateProductConditionCategoriesRule()
+    {
+        $rule = self::setupBaseRule();
+
+        $categoryIds = Mage::getModel('catalog/category')->getCollection()->getAllIds(2);
+
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_product_found',
+                'value' => 1,
+                'aggregator' => 'all',
+                'new_child' => '',
+            ];
+
+        $conditions['1--1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_product',
+                'attribute' => 'category_ids',
+                'operator' => '()',
+                'value' => implode(',', $categoryIds),
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
+    public static function generateProductConditionSkuRule()
+    {
+        $rule = self::setupBaseRule();
+
+        $conditions = self::generateRuleConditionCombineArray();
+        $conditions['1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_product_found',
+                'value' => 1,
+                'aggregator' => 'all',
+                'new_child' => '',
+            ];
+
+        $conditions['1--1--1'] =
+            [
+                'type' => 'salesrule/rule_condition_product',
+                'attribute' => 'sku',
+                'operator' => '==',
+                'value' => 'msj000',
+            ];
+        $rule->setData('conditions', $conditions);
+        $rule->loadPost($rule->getData())->save();
+
+        return $rule;
+    }
+
     /**
      * @return false|Mage_Core_Model_Abstract|Mage_SalesRule_Model_Rule
      * @throws Exception

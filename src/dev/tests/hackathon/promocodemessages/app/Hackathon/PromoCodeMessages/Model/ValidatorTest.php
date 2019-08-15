@@ -375,6 +375,38 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
     }
 
     /**
+     * @throws Mage_Core_Exception
+     * @expectedException Mage_Core_Exception
+     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_heading">All of the following conditions must be met:<ul><li class="promo_error_item">Category must be one of <em>Root Catalog, Default Category</em>.</li></ul></li></ul>
+     */
+    public function testProductConditionsCategoriesRule()
+    {
+        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateProductConditionCategoriesRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
+        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+
+        $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
+    }
+
+    /**
+     * @throws Mage_Core_Exception
+     * @expectedException Mage_Core_Exception
+     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_heading">All of the following conditions must be met:<ul><li class="promo_error_item">SKU must be <em>msj000</em>.</li></ul></li></ul>
+     */
+    public function testProductConditionsSkuRule()
+    {
+        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateProductConditionSkuRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
+        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+
+        $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
+    }
+
+    /**
      * Allow calling protected methods. TODO: needed?
      *
      * @param $name
