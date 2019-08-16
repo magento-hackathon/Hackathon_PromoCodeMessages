@@ -41,11 +41,17 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected $_actions = [];
 
     /**
-     * Default values for possible operator options.
+     * Default values for possible 'found' operator options.
      *
      * @var array
      */
-    protected $_operators = null;
+    protected $_foundOperators = null;
+
+    /**
+     * Default values for 'not found' operator options.
+     * @var array
+     */
+    protected $_notFoundOperators = null;
 
     /**
      * Rule-specific attributes that use price. Note that product attribute type is determined dynamically.
@@ -61,6 +67,11 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         ];
 
     protected $_helper;
+
+    /**
+     * @var bool
+     */
+    protected $_isNegativeOperator;
 
     /**
      * Setup helper.
@@ -254,6 +265,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
         if (count($msgs) > 0) {
             $errorMsgs = $this->_multiImplode('', $msgs);
+
             return $this->_formatMessage($errorMsgs);
         }
     }
@@ -284,6 +296,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $newMsgs[] = $msgs;
             $newMsgs[] = '</ul></li>';
             $errorMsgs = $this->_multiImplode('', $newMsgs);
+
             return $this->_formatMessage($errorMsgs);
         }
     }
@@ -291,17 +304,15 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     /**
      * Process a single condition. The given condition may have subconditions, so function is recursive until it's
      * complete.
-     * TODO: when $condition['value'] = "0", it's a "not found" instead of "found" condition
      *
      * @param array $condition
      * @return array
      * @throws Mage_Core_Exception
      */
-    protected function _processCondition($condition = [])
+    protected function _processCondition($condition = [], $isNotFoundOperator = false)
     {
         $msgs = [];
-        // handle parent condition: salesrule/rule_condition_product_found
-        $msg = $this->_processRule($condition);
+        $msg = $this->_processRule($condition, $isNotFoundOperator);
         if (!is_null($msg)) {
             $msgs[] = $msg;
         }
@@ -312,9 +323,14 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 $this->_createAggregatedHeading($condition['aggregator']));
             $msgs[] = $headingMsg;
             $subMsgs = [];
+            $isNotFoundOperator = false;
+            if ($condition['type'] == 'salesrule/rule_condition_product_found' &&
+                $condition['value'] == '0') {
+                $isNotFoundOperator = true;
+            }
             $subConditions = $condition['conditions'];
             foreach ($subConditions as $subCondition) {
-                $subMsgs[] = $this->_processCondition($subCondition);
+                $subMsgs[] = $this->_processCondition($subCondition, $isNotFoundOperator);
             }
             $msgs[] = $subMsgs;
             $msgs[] = '</ul></li>';
@@ -331,11 +347,10 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * @return String containing error message
      * @throws Mage_Core_Exception
      */
-    protected function _processRule($condition = [])
+    protected function _processRule($condition = [], $isNegativeOperator = false)
     {
         $attribute = $condition['attribute'];
-        //TODO: handle "if a product found/not found"; we're not doing that here since $attribute is null
-        if (is_null($attribute)) { // product
+        if (is_null($attribute)) {
             return null;
         }
         $operator = $condition['operator'];
@@ -387,7 +402,8 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
 
         // Loop through operators looking for a match
-        foreach ($this->_getOperators() as $operatorCode => $operatorText) {
+        $operators = $isNegativeOperator ? $this->_getNotFoundOperators() : $this->_getFoundOperators();
+        foreach ($operators as $operatorCode => $operatorText) {
             if ($operatorCode == $operator) {
                 // get the rule attributes and their values
                 $attributeOptions = $ruleType->getAttributeOption();
@@ -488,6 +504,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if (count($this->_conditions) == 0) {
             if ($rule->getId()) {
                 $data = unserialize($rule->getData('conditions_serialized'));
+                //$this->_conditions = $data;
                 if (isset($data['conditions'])) {
                     $this->_conditions = $data['conditions'];
                 }
@@ -518,16 +535,14 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     }
 
     /**
-     * Default operator options getter
-     * Provides all possible operator options
-     * TODO: handle value = 0
+     * Operator options getter for 'found' conditions.
      *
      * @return array
      */
-    protected function _getOperators()
+    protected function _getFoundOperators()
     {
-        if (null === $this->_operators) {
-            $this->_operators = [
+        if (null === $this->_foundOperators) {
+            $this->_foundOperators = [
                 '==' => $this->_helper->__('must be'),
                 '!=' => $this->_helper->__('must not be'),
                 '>=' => $this->_helper->__('must be equal or greater than'),
@@ -541,7 +556,31 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             ];
         }
 
-        return $this->_operators;
+        return $this->_foundOperators;
+    }
+
+    /**
+     * Operator options getter for 'not found' conditions.
+     * @return array|null
+     */
+    protected function _getNotFoundOperators()
+    {
+        if (null === $this->_notFoundOperators) {
+            $this->_notFoundOperators = [
+                '==' => $this->_helper->__('cannot be'),
+                '!=' => $this->_helper->__('must be'),
+                '>=' => $this->_helper->__('cannot be equal or greater than'),
+                '<=' => $this->_helper->__('cannot be equal or less than'),
+                '>' => $this->_helper->__('cannot be greater than'),
+                '<' => $this->_helper->__('cannot be less than'),
+                '{}' => $this->_helper->__('cannot contain'),
+                '!{}' => $this->_helper->__('must contain'),
+                '()' => $this->_helper->__('cannot be one of'),
+                '!()' => $this->_helper->__('must be one of')
+            ];
+        }
+
+        return $this->_notFoundOperators;
     }
 
     /**
