@@ -439,8 +439,7 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
             ->setSimpleFreeShipping('0')
             ->setApplyToShipping('0')
             ->setIsRss(0)
-            ->setWebsiteIds(self::getAllWebsites())
-            ->setStoreLabels(array('My Rule Frontend Label'));
+            ->setWebsiteIds(self::getAllWebsites());
 
         return $rule;
     }
@@ -492,66 +491,5 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         $websites = Mage::getModel('core/website')->getCollection()->getAllIds();
 
         return implode(',', $websites);
-    }
-
-    /**
-     * @return false|Mage_Core_Model_Abstract|Mage_SalesRule_Model_Rule
-     * @throws Exception
-     */
-    public static function generateRuleOld()
-    {
-        // SalesRule Rule model
-        $rule = Mage::getModel('salesrule/rule');
-
-        // Rule data
-        $rule->setName('Rule name')
-            ->setDescription('Rule description')
-            ->setFromDate('')
-            ->setCouponType(Mage_SalesRule_Model_Rule::COUPON_TYPE_SPECIFIC)
-            ->setCouponCode(self::generateUniqueId(5))
-            ->setUsesPerCustomer(1)
-            ->setUsesPerCoupon(1)
-            ->setCustomerGroupIds(self::getAllCustomerGroups())
-            ->setIsActive(1)
-            ->setConditionsSerialized('')
-            ->setActionsSerialized('')
-            ->setStopRulesProcessing(0)
-            ->setIsAdvanced(1)
-            ->setProductIds('')
-            ->setSortOrder(0)
-            ->setSimpleAction(Mage_SalesRule_Model_Rule::BY_PERCENT_ACTION)
-            ->setDiscountAmount(10)
-            ->setDiscountQty(1)
-            ->setDiscountStep(0)
-            ->setSimpleFreeShipping('0')
-            ->setApplyToShipping('0')
-            ->setIsRss(0)
-            ->setWebsiteIds(self::getAllWebsites())
-            ->setStoreLabels(array('My Rule Frontend Label'));
-
-        // Product found condition type
-        $productFoundCondition = Mage::getModel('salesrule/rule_condition_product_found')
-            ->setType('salesrule/rule_condition_product_found')
-            ->setValue(1)// 0 == not found, 1 == found
-            ->setAggregator('all');     // match all conditions
-
-        // 'Attribute set id 1' product action condition
-        $attributeSetCondition = Mage::getModel('salesrule/rule_condition_product')
-            ->setType('salesrule/rule_condition_product')
-            ->setAttribute('attribute_set_id')
-            ->setOperator('==')
-            ->setValue(1);
-
-        // Bind attribute set condition to product found condition
-        $productFoundCondition->addCondition($attributeSetCondition);
-
-        // If a product with 'attribute set id 1' is found in the cart
-        //$rule->getConditions()->addCondition($productFoundCondition);
-        // Only apply the rule discount to this specific product
-        $rule->getActions()->addCondition($attributeSetCondition);
-
-        $rule->save();
-
-        return $rule;
     }
 }
