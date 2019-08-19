@@ -382,6 +382,5 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
             . '</ul></li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
-        $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 }
