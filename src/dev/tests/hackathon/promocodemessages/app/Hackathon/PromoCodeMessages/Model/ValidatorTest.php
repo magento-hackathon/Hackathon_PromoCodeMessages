@@ -20,6 +20,10 @@
 
 include('SalesRuleMother.php');
 
+/**
+ * "Unit" tests to check error messages only; real cart rules are created to test, but the actual
+ * validation will always fail; does not handle actual validation of cart rules, only error messaging.
+ */
 class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_TestCase
 {
 
@@ -66,14 +70,11 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
             ->disableOriginalConstructor()
             ->setMethods(['getWebsiteId'])
             ->getMock();
-        //        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
 
         $this->couponMock = $this->getMockBuilder(Mage_SalesRule_Model_Coupon::class)
             ->disableOriginalConstructor()
             ->setMethods(['load', 'getId', 'getRuleId', 'getCouponId',])
             ->getMock();
-        //        $this->couponMock->expects($this->once())->method('getRuleId')->willReturn(1);
-        //        $this->couponMock->expects($this->once())->method('getCouponId')->willReturn(1);
 
         $this->ruleMock = $this->getMockBuilder(Mage_SalesRule_Model_Rule::class)
             ->disableOriginalConstructor()
@@ -104,23 +105,15 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         }
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message">Coupon code does not exist.</ul>
-     */
     public function testValidateWithInvalidCode()
     {
         $couponCode = 'sdfsdf';
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $this->expectExceptionMessage('<ul class="promo_error_message">Coupon code does not exist.</ul>');
         $validator->validate($couponCode, $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message">Your coupon is not valid for this store.</ul><ul class="promo_error_additional">Allowed Websites: Main Website.</ul>
-     */
     public function testValidateInvalidWebsiteIds()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateRule();
@@ -128,13 +121,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(400);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid for this store.</ul>'
+            . '<ul class="promo_error_additional">Allowed Websites: Main Website.</ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message">Your coupon is not valid for your Customer Group.</ul><ul class="promo_error_additional">Allowed Customer Groups: General.</ul>
-     */
     public function testInvalidCustomerGroups()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateCustomerGroupIdRule();
@@ -143,13 +136,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(0);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid for your Customer '
+            . 'Group.</ul><ul class="promo_error_additional">Allowed Customer Groups: General.</ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message">Your coupon is inactive.</ul>
-     */
     public function testInactiveRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateInactiveRule();
@@ -157,34 +150,39 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         /** @var Hackathon_PromoCodeMessages_Model_Validator $validator */
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
 
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon is inactive.</ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message">Your coupon is no longer valid. It expired on January 1, 2010.</ul><ul class="promo_error_additional"></ul>
-     */
     public function testExpiredRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateExpiredRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon is no longer valid. It expired on '
+            . 'January 1, 2010.</ul><ul class="promo_error_additional"></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message">Your coupon is not valid yet. It will be active on January 1, 2030.</ul><ul class="promo_error_additional"></ul>
-     */
     public function testNotYetActiveRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateNotYetActiveRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid yet. It will be active '
+            . 'on January 1, 2030.</ul><ul class="promo_error_additional"></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
@@ -195,30 +193,27 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message">Your coupon was already used.</ul><ul class="promo_error_additional">It may only be used 1 time(s).</ul>
-     */
     public function testGloballyAlreadyUsedRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateGlobalAlreadyUsedRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon was already used.</ul>'
+            . '<ul class="promo_error_additional">It may only be used 1 time(s).</ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message">Your coupon was already used.</ul><ul class="promo_error_additional">It may only be used 1 time(s).</ul>
-     */
     public function testCustomerAlreadyUsedRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateCustomerAlreadyUsedRule();
@@ -227,14 +222,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon was already used.</ul>'
+            . '<ul class="promo_error_additional">It may only be used 1 time(s).</ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_item">Subtotal must be equal or greater than <em>$1,000.00</em>.</li></ul>
-     */
     public function testAddressConditionsSubtotalRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionSubtotalRule();
@@ -243,14 +237,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Subtotal must be '
+            . 'equal or greater than <em>$1,000.00</em>.</li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_item">Total Items Quantity must be <em>5</em>.</li></ul>
-     */
     public function testAddressConditionsTotalQtyRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionTotalQtyRule();
@@ -259,14 +252,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Total Items '
+            . 'Quantity must be <em>5</em>.</li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_item">Total Weight must be greater than <em>5 lbs</em>.</li></ul>
-     */
     public function testAddressConditionsWeightRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionWeightRule();
@@ -275,14 +267,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Total Weight '
+            . 'must be greater than <em>5 lbs</em>.</li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_item">Payment Method must be <em>Check / Money order</em>.</li></ul>
-     */
     public function testAddressConditionsPaymentMethodRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionPaymentMethodRule();
@@ -291,14 +282,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Payment Method '
+            . 'must be <em>Check / Money order</em>.</li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_item">Shipping Method must be <em>flatrate_flatrate</em>.</li></ul>
-     */
     public function testAddressConditionsShippingMethodRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionShippingMethodRule();
@@ -307,14 +297,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Shipping Method '
+            . 'must be <em>flatrate_flatrate</em>.</li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_item">Shipping Postcode must be one of <em>11215, 12346</em>.</li></ul>
-     */
     public function testAddressConditionsPostCodeRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionPostCodeRule();
@@ -323,14 +312,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Shipping Postcode '
+            . 'must be one of <em>11215, 12346</em>.</li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_item">Shipping Region must be <em>Quebec</em>.</li></ul>
-     */
     public function testAddressConditionsRegionRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionRegionRule();
@@ -339,14 +327,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Shipping Region '
+            . 'must be <em>Quebec</em>.</li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_item">Shipping State/Province must be <em>Alabama</em>.</li></ul>
-     */
     public function testAddressConditionsRegionIdRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionRegionIdRule();
@@ -355,14 +342,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Shipping '
+            . 'State/Province must be <em>Alabama</em>.</li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_item">Shipping Country must be <em>United States</em>.</li></ul>
-     */
     public function testAddressConditionsCountryIdRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionCountryIdRule();
@@ -371,14 +357,13 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Shipping Country '
+            . 'must be <em>United States</em>.</li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_heading">All of the following conditions must be met:<ul><li class="promo_error_item">Category must be one of <em>Root Catalog, Default Category</em>.</li></ul></li></ul>
-     */
     public function testProductConditionsCategoriesRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateProductConditionCategoriesRule();
@@ -387,39 +372,96 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_heading">All of the '
+            . 'following conditions must be met:<ul><li class="promo_error_item">Category must be one '
+            . 'of <em>Root Catalog, Default Category</em>.</li></ul></li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * @throws Mage_Core_Exception
-     * @expectedException Mage_Core_Exception
-     * @expectedExceptionMessage <ul class="promo_error_message"><li class="promo_error_heading">All of the following conditions must be met:<ul><li class="promo_error_item">SKU must be <em>msj000</em>.</li></ul></li></ul>
-     */
     public function testProductConditionsSkuRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateProductConditionSkuRule();
+        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateFoundProductConditionAttributeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
         $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_heading">All of the '
+            . 'following conditions must be met:<ul><li class="promo_error_item">SKU must be '
+            . '<em>msj000</em>.</li></ul></li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    /**
-     * Allow calling protected methods. TODO: needed?
-     *
-     * @param $name
-     * @return ReflectionMethod
-     * @throws ReflectionException
-     */
-    protected static function getMethod($name)
+    public function testProductConditionNotFoundSkuRule()
     {
-        $class = new ReflectionClass('Hackathon_PromoCodeMessages_Model_Validator');
-        $method = $class->getMethod($name);
-        $method->setAccessible(true);
+        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateNotFoundProductConditionAttributeRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
+        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
 
-        return $method;
+        $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_heading">All of the '
+            . 'following conditions must be met:<ul><li class="promo_error_item">SKU cannot be '
+            . '<em>sdfsdf</em>.</li></ul></li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
+        $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
+    public function testFoundProductActionsSkuRule()
+    {
+        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateFoundActionAttributeRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
+        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+
+        $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_heading">Error applying '
+            . 'rule to a particular cart item:<ul><li class="promo_error_item">SKU must be '
+            . '<em>msj000</em>.</li></ul></li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
+        $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
+    }
+
+    public function testNotFoundProductActionsSkuRule()
+    {
+        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateNotFoundActionAttributeRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
+        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+
+        $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_heading">Error applying '
+            . 'rule to a particular cart item:<ul><li class="promo_error_heading">All of the following '
+            . 'conditions must be met:<ul><li class="promo_error_item">SKU cannot be <em>msj000</em>.</li>'
+            . '</ul></li></ul></li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
+        $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
+    }
+
+    public function testConditionsAndActionsRule()
+    {
+        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateConditionAndActionRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
+        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+
+        $validator = new Hackathon_PromoCodeMessages_Model_Validator();
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_heading">All of the '
+            . 'following conditions must be met:<ul><li class="promo_error_item">Category must be one of '
+            . '<em>Root Catalog, Default Category</em>.</li></ul></li></ul><ul '
+            . 'class="promo_error_message"><li class="promo_error_heading">Error applying rule to a '
+            . 'particular cart item:<ul><li class="promo_error_item">SKU must be <em>msj000</em>.</li>'
+            . '</ul></li></ul>';
+        $this->expectExceptionMessage($exceptionMsg);
+        $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
+
+    }
 }

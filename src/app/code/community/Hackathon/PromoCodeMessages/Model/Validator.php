@@ -312,6 +312,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     protected function _processCondition($condition = [], $isNotFoundOperator = false)
     {
         $msgs = [];
+        // TODO: we need to get a heading for aggregate here
         $msg = $this->_processRule($condition, $isNotFoundOperator);
         if (!is_null($msg)) {
             $msgs[] = $msg;
