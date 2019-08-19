@@ -14,7 +14,7 @@
     </testsuite>
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">../../../../app/code/community/Hackathon/</directory>
+            <directory suffix=".php">../../../app/code/community/Hackathon/</directory>
         </whitelist>
     </filter>
 </phpunit>

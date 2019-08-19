@@ -2,7 +2,7 @@
 
 $magentoRoot = getenv('MAGENTO_ROOT');
 if (empty($magentoRoot)) {
-    $magentoRoot = realpath(dirname(dirname(dirname(dirname(__DIR__)))));
+    $magentoRoot = realpath(dirname(dirname(dirname(__DIR__))));
 }
 
 define('MAGENTO_ROOT', $magentoRoot);
@@ -13,5 +13,5 @@ ini_set('memory_limit', '512M');
 require_once MAGENTO_ROOT . '/app/Mage.php';
 //Start the Magento application
 Mage::app('default');
-//Avoid issues "Headers already send"
+//Avoid issues "Headers already sent"
 session_start();

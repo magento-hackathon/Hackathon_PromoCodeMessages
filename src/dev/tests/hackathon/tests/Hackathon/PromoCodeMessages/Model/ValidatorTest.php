@@ -186,19 +186,6 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testMageMailExpiredRule()
-    {
-        $this->markTestIncomplete('need to fix magemail_expired_at');
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateMageMailExpireRule();
-        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
-        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
-        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
-
-        $validator = new Hackathon_PromoCodeMessages_Model_Validator();
-        $this->expectException(Mage_Core_Exception::class);
-        $validator->validate($this->rule->getCouponCode(), $this->quoteMock);
-    }
-
     public function testGloballyAlreadyUsedRule()
     {
         $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateGlobalAlreadyUsedRule();

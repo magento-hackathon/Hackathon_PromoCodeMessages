@@ -49,16 +49,6 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return self::setupBaseRule()->setCustomerGroupIds('1')->save();
     }
 
-    public static function generateMageMailExpireRule()
-    {
-        $rule = self::setupBaseRule()->save();
-        $coupon = Mage::getModel('salesrule/coupon')->load($rule->getCouponCode(), 'code');
-        // TODO: magemail_expired_at not persisting
-        $coupon->setTimesUsed(1)->setData('magemail_expired_at', '2010-01-01')->save();
-
-        return $rule;
-    }
-
     public static function generateGlobalAlreadyUsedRule()
     {
         $rule = self::setupBaseRule()->save();
@@ -419,7 +409,7 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
     /**
      * Sets up a base rule with 10% off. Used for generating various rule types.
      *
-     * @return false|Mage_Core_Model_Abstract|Mage_SalesRule_Model_Rule
+     * @return Mage_SalesRule_Model_Rule
      */
     private static function setupBaseRule()
     {
