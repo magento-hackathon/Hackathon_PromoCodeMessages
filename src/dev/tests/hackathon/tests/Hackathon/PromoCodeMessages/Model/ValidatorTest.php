@@ -38,14 +38,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
     private $storeMock;
 
     /**
-     * @var PHPUnit_Framework_MockObject_MockObject|Mage_SalesRule_Model_Coupon
+     * @var Hackathon_PromoCodeMessages_Model_SalesRuleMother
      */
-    private $couponMock;
-
-    /**
-     * @var PHPUnit_Framework_MockObject_MockObject|Mage_SalesRule_Model_Rule
-     */
-    private $ruleMock;
+    private $ruleMother;
 
     /**
      * @var Mage_SalesRule_Model_Rule
@@ -70,28 +65,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
             ->setMethods(['getWebsiteId'])
             ->getMock();
 
-        $this->couponMock = $this->getMockBuilder(Mage_SalesRule_Model_Coupon::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['load', 'getId', 'getRuleId', 'getCouponId',])
-            ->getMock();
-
-        $this->ruleMock = $this->getMockBuilder(Mage_SalesRule_Model_Rule::class)
-            ->disableOriginalConstructor()
-            ->setMethods(
-                [
-                    'getRuleId',
-                    'getName',
-                    'getDescription',
-                    'getFromDate',
-                    'getToDate',
-                    'getSimpleAction',
-                    'getIsActive',
-                    'getCustomerGroupIds',
-                    'getWebsiteIds'
-                ]
-            )
-            ->getMock();
-
+        $this->ruleMother = new Hackathon_PromoCodeMessages_Model_SalesRuleMother();
         $this->validator = Mage::getModel('hackathon_promocodemessages/validator');
     }
 
@@ -99,8 +73,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
     {
         $this->storeMock = null;
         $this->quoteMock = null;
-        $this->couponMock = null;
-        $this->ruleMock = null;
+        $this->ruleMother = null;
         $this->validator = null;
         if ($this->rule) {
             $this->rule->delete();
@@ -117,7 +90,8 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testValidateInvalidWebsiteIds()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateRule();
+//        $this->rule = $this->ruleMother->generateRule();
+        $this->rule = $this->ruleMother->generateRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(400);
 
@@ -131,7 +105,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testInvalidCustomerGroups()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateCustomerGroupIdRule();
+        $this->rule = $this->ruleMother->generateCustomerGroupIdRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(0);
@@ -144,7 +118,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testInactiveRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateInactiveRule();
+        $this->rule = $this->ruleMother->generateInactiveRule();
         $this->expectException(Mage_Core_Exception::class);
         $exceptionMsg = '<ul class="promo_error_message">Your coupon is inactive.</ul>';
         $this->expectExceptionMessage($exceptionMsg);
@@ -153,7 +127,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testExpiredRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateExpiredRule();
+        $this->rule = $this->ruleMother->generateExpiredRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -166,7 +140,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testNotYetActiveRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateNotYetActiveRule();
+        $this->rule = $this->ruleMother->generateNotYetActiveRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -179,7 +153,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testGloballyAlreadyUsedRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateGlobalAlreadyUsedRule();
+        $this->rule = $this->ruleMother->generateGlobalAlreadyUsedRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -192,7 +166,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testCustomerAlreadyUsedRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateCustomerAlreadyUsedRule();
+        $this->rule = $this->ruleMother->generateCustomerAlreadyUsedRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -205,7 +179,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testAddressConditionsSubtotalRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionSubtotalRule();
+        $this->rule = $this->ruleMother->generateAddressConditionSubtotalRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -218,7 +192,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testAddressConditionsTotalQtyRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionTotalQtyRule();
+        $this->rule = $this->ruleMother->generateAddressConditionTotalQtyRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -231,7 +205,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testAddressConditionsWeightRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionWeightRule();
+        $this->rule = $this->ruleMother->generateAddressConditionWeightRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -244,7 +218,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testAddressConditionsPaymentMethodRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionPaymentMethodRule();
+        $this->rule = $this->ruleMother->generateAddressConditionPaymentMethodRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -257,7 +231,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testAddressConditionsShippingMethodRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionShippingMethodRule();
+        $this->rule = $this->ruleMother->generateAddressConditionShippingMethodRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -270,7 +244,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testAddressConditionsPostCodeRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionPostCodeRule();
+        $this->rule = $this->ruleMother->generateAddressConditionPostCodeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -283,7 +257,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testAddressConditionsRegionRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionRegionRule();
+        $this->rule = $this->ruleMother->generateAddressConditionRegionRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -296,7 +270,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testAddressConditionsRegionIdRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionRegionIdRule();
+        $this->rule = $this->ruleMother->generateAddressConditionRegionIdRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -309,7 +283,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testAddressConditionsCountryIdRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateAddressConditionCountryIdRule();
+        $this->rule = $this->ruleMother->generateAddressConditionCountryIdRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -322,7 +296,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testProductConditionsCategoriesRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateProductConditionCategoriesRule();
+        $this->rule = $this->ruleMother->generateProductConditionCategoriesRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -336,7 +310,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testProductConditionsSkuRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateFoundProductConditionAttributeRule();
+        $this->rule = $this->ruleMother->generateFoundProductConditionAttributeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -350,7 +324,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testProductConditionNotFoundSkuRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateNotFoundProductConditionAttributeRule();
+        $this->rule = $this->ruleMother->generateNotFoundProductConditionAttributeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -364,7 +338,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testFoundProductActionsSkuRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateFoundActionAttributeRule();
+        $this->rule = $this->ruleMother->generateFoundActionAttributeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -378,7 +352,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testNotFoundProductActionsSkuRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateNotFoundActionAttributeRule();
+        $this->rule = $this->ruleMother->generateNotFoundActionAttributeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -394,7 +368,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testConditionsAndActionsRule()
     {
-        $this->rule = Hackathon_PromoCodeMessages_Model_SalesRuleMother::generateConditionAndActionRule();
+        $this->rule = $this->ruleMother->generateConditionAndActionRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
@@ -409,6 +383,5 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
-
     }
 }
