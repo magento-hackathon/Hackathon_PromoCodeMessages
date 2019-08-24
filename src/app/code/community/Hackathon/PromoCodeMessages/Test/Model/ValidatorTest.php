@@ -48,7 +48,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
     private $rule;
 
     /**
-     * @var false|Hackathon_PromoCodeMessages_Model_Validator|Mage_Core_Model_Abstract
+     * @var Hackathon_PromoCodeMessages_Model_Validator
      */
     private $validator;
 
@@ -64,7 +64,6 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
             ->disableOriginalConstructor()
             ->setMethods(['getWebsiteId'])
             ->getMock();
-
         Mage::getSingleton('core/resource')->getConnection('core_write')->beginTransaction();
         $this->ruleMother = new Hackathon_PromoCodeMessages_Model_SalesRuleMother();
         $this->validator = Mage::getModel('hackathon_promocodemessages/validator');
@@ -72,6 +71,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     protected function tearDown()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/add_additional_info_on_frontend', 0);
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 0);
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_actions', 0);
         $this->storeMock = null;
         $this->quoteMock = null;
         $this->ruleMother = null;
@@ -102,6 +104,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testValidateInvalidWebsiteIdsWithAdditionalInfo()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/add_additional_info_on_frontend', 1);
         $this->rule = $this->ruleMother->generateRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(400);
@@ -110,7 +113,6 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid for this store.</ul>'
             . '<ul class="promo_error_additional">Allowed Websites: Main Website.</ul>';
         $this->expectExceptionMessage($exceptionMsg);
-
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
@@ -128,6 +130,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testInvalidCustomerGroupsWithAdditionalInfo()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/add_additional_info_on_frontend', 1);
         $this->rule = $this->ruleMother->generateCustomerGroupIdRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -139,7 +142,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testInactiveRule()
+    public function testInactive()
     {
         $this->rule = $this->ruleMother->generateInactiveRule();
         $this->expectException(Mage_Core_Exception::class);
@@ -148,7 +151,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testExpiredRule()
+    public function testExpired()
     {
         $this->rule = $this->ruleMother->generateExpiredRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
@@ -156,12 +159,12 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
         $this->expectException(Mage_Core_Exception::class);
         $exceptionMsg = '<ul class="promo_error_message">Your coupon is no longer valid. It expired on '
-            . 'January 1, 2010.</ul><ul class="promo_error_additional"></ul>';
+            . 'January 1, 2010.</ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testNotYetActiveRule()
+    public function testNotYetActive()
     {
         $this->rule = $this->ruleMother->generateNotYetActiveRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
@@ -169,13 +172,26 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
         $this->expectException(Mage_Core_Exception::class);
         $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid yet. It will be active '
-            . 'on January 1, 2030.</ul><ul class="promo_error_additional"></ul>';
+            . 'on January 1, 2030.</ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testGloballyAlreadyUsedRule()
+    public function testGloballyAlreadyUsed()
     {
+        $this->rule = $this->ruleMother->generateGlobalAlreadyUsedRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
+        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon was already used.</ul>';
+        $this->expectExceptionMessage($exceptionMsg);
+        $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
+    }
+
+    public function testGloballyAlreadyUsedWithAdditional()
+    {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/add_additional_info_on_frontend', 1);
         $this->rule = $this->ruleMother->generateGlobalAlreadyUsedRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -187,8 +203,21 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testCustomerAlreadyUsedRule()
+    public function testCustomerAlreadyUsed()
     {
+        $this->rule = $this->ruleMother->generateCustomerAlreadyUsedRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
+        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon was already used.</ul>';
+        $this->expectExceptionMessage($exceptionMsg);
+        $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
+    }
+
+    public function testCustomerAlreadyUsedWithAdditional()
+    {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/add_additional_info_on_frontend', 1);
         $this->rule = $this->ruleMother->generateCustomerAlreadyUsedRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -200,8 +229,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testAddressConditionsSubtotalRule()
+    public function testAddressConditionsSubtotal()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateAddressConditionSubtotalRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -213,8 +243,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testAddressConditionsTotalQtyRule()
+    public function testAddressConditionsTotalQty()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateAddressConditionTotalQtyRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -226,8 +257,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testAddressConditionsWeightRule()
+    public function testAddressConditionsWeight()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateAddressConditionWeightRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -239,8 +271,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testAddressConditionsPaymentMethodRule()
+    public function testAddressConditionsPaymentMethod()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateAddressConditionPaymentMethodRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -252,8 +285,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testAddressConditionsShippingMethodRule()
+    public function testAddressConditionsShippingMethod()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateAddressConditionShippingMethodRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -265,8 +299,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testAddressConditionsPostCodeRule()
+    public function testAddressConditionsPostCode()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateAddressConditionPostCodeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -278,8 +313,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testAddressConditionsRegionRule()
+    public function testAddressConditionsRegion()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateAddressConditionRegionRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -291,8 +327,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testAddressConditionsRegionIdRule()
+    public function testAddressConditionsRegionId()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateAddressConditionRegionIdRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -304,8 +341,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testAddressConditionsCountryIdRule()
+    public function testAddressConditionsCountryId()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateAddressConditionCountryIdRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -317,8 +355,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testProductConditionsCategoriesRule()
+    public function testProductConditionsCategories()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateProductConditionCategoriesRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -331,8 +370,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testProductConditionsSkuRule()
+    public function testProductConditionsSku()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateFoundProductConditionAttributeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -345,8 +385,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testProductConditionNotFoundSkuRule()
+    public function testProductConditionNotFoundSku()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
         $this->rule = $this->ruleMother->generateNotFoundProductConditionAttributeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -359,8 +400,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testFoundProductActionsSkuRule()
+    public function testFoundProductActionsSku()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_actions', 1);
         $this->rule = $this->ruleMother->generateFoundActionAttributeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -373,8 +415,9 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testNotFoundProductActionsSkuRule()
+    public function testNotFoundProductActionsSku()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_actions', 1);
         $this->rule = $this->ruleMother->generateNotFoundActionAttributeRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
@@ -389,8 +432,10 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
 
-    public function testConditionsAndActionsRule()
+    public function testConditionsAndActions()
     {
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_conditions', 1);
+        Mage::app()->getStore()->setConfig('checkout/promocodemessages/include_actions', 1);
         $this->rule = $this->ruleMother->generateConditionAndActionRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
