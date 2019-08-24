@@ -65,6 +65,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
             ->setMethods(['getWebsiteId'])
             ->getMock();
 
+        Mage::getSingleton('core/resource')->getConnection('core_write')->beginTransaction();
         $this->ruleMother = new Hackathon_PromoCodeMessages_Model_SalesRuleMother();
         $this->validator = Mage::getModel('hackathon_promocodemessages/validator');
     }
@@ -75,9 +76,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->quoteMock = null;
         $this->ruleMother = null;
         $this->validator = null;
-        if ($this->rule) {
-            $this->rule->delete();
-        }
+        Mage::getSingleton('core/resource')->getConnection('core_write')->rollBack();
     }
 
     public function testValidateWithInvalidCode()
@@ -90,7 +89,19 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
 
     public function testValidateInvalidWebsiteIds()
     {
-//        $this->rule = $this->ruleMother->generateRule();
+        $this->rule = $this->ruleMother->generateRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(400);
+
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid for this store.</ul>';
+        $this->expectExceptionMessage($exceptionMsg);
+
+        $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
+    }
+
+    public function testValidateInvalidWebsiteIdsWithAdditionalInfo()
+    {
         $this->rule = $this->ruleMother->generateRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(400);
@@ -104,6 +115,18 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
     }
 
     public function testInvalidCustomerGroups()
+    {
+        $this->rule = $this->ruleMother->generateCustomerGroupIdRule();
+        $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);
+        $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
+        $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(0);
+        $this->expectException(Mage_Core_Exception::class);
+        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid for your Customer Group.</ul>';
+        $this->expectExceptionMessage($exceptionMsg);
+        $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
+    }
+
+    public function testInvalidCustomerGroupsWithAdditionalInfo()
     {
         $this->rule = $this->ruleMother->generateCustomerGroupIdRule();
         $this->quoteMock->expects($this->once())->method('getStore')->willReturn($this->storeMock);

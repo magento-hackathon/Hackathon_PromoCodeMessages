@@ -10,11 +10,6 @@
          syntaxCheck="true"
          bootstrap="./autoload.php">
     <testsuite name="Hackathon PromoCodeMessages Unit Tests">
-        <directory suffix="Test.php">tests</directory>
+        <directory suffix="Test.php">.</directory>
     </testsuite>
-    <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">../../../app/code/community/Hackathon/</directory>
-        </whitelist>
-    </filter>
 </phpunit>
