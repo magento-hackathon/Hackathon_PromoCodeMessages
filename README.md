@@ -3,16 +3,12 @@ Hackathon_PromoCodeMessages
 
 Provide improved error messages when entering a promo code fails.
 
-Current State
--------------
-Beta. Still working through the various rule types. Currently supports conditions under *General Information* tab and 
-*Conditions* tab.
-
 Options
 -------
-There are two system configuration options under Sales -> Checkout -> Promo Code Error Messages. You can display 
+There are three system configuration options under Sales -> Checkout -> Promo Code Error Messages. You can display 
 additional information about the error (for example, if the customer is not in the correct group for the rule, you can
-display the required groups). In addition, error messaging for the more complex condition-based rules can be turned off.
+display the required groups). In addition, error messaging for the more complex condition-based and action-based rules 
+can be turned off.
 
 
 Translations
@@ -33,11 +29,6 @@ Each message is wrapped in a class to use for styling:
 **promo_error_item:** Used in conjunction with *promo_error_heading*; wraps each condition required for the promo code.
 
 There is a CSS file that will indent nested messages included.
-
-ToDo
-----
-- actions
-- functional tests
 
 
 License
