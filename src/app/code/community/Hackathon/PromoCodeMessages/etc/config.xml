@@ -62,7 +62,7 @@
                 <enabled>1</enabled>
                 <add_additional_info_on_frontend>1</add_additional_info_on_frontend>
                 <include_conditions>1</include_conditions>
-                <include_actions>0</include_actions>
+                <include_actions>1</include_actions>
             </promocodemessages>
         </checkout>
     </default>
