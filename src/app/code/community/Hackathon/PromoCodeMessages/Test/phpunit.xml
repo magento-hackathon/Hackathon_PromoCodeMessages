@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/5.7/phpunit.xsd"
+         backupGlobals="false"
+         colors="true"
+         bootstrap="./bootstrap.php">
+    <testsuite name="Hackathon PromoCodeMessages Unit Tests">
+        <directory>.</directory>
+    </testsuite>
+</phpunit>

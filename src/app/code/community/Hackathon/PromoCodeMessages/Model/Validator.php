@@ -1,8 +1,6 @@
 <?php
 /**
- *
  * NOTICE OF LICENSE
- *
  * This source file is subject to the Open Software License (OSL 3.0)
  * that is bundled with this package in the file LICENSE.txt.
  * It is also available through the world-wide-web at this URL:
@@ -10,9 +8,7 @@
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
  * to license@magentocommerce.com so we can send you a copy immediately.
- *
  * DISCLAIMER
- *
  * Do not edit or add to this file if you wish to upgrade this extension
  * to newer versions in the future.
  *
@@ -20,7 +16,6 @@
  * @package    Hackathon_PromoCodeMessages
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-
 
 /**
  * Validates promo codes after the core Magento validation occurs.
@@ -36,47 +31,64 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      *
      * @var array
      */
-    protected $_conditions = array();
-
+    protected $_conditions = [];
 
     /**
-     * Default values for possible operator options.
+     * Array of actions attached to the current rule.
      *
      * @var array
      */
-    protected $_operators = null;
+    protected $_actions = [];
 
+    /**
+     * Default values for possible 'found' operator options.
+     *
+     * @var array
+     */
+    protected $_foundOperators = null;
+
+    /**
+     * Default values for 'not found' operator options.
+     * @var array
+     */
+    protected $_notFoundOperators = null;
 
     /**
      * Rule-specific attributes that use price. Note that product attribute type is determined dynamically.
      *
      * @var array
      */
-    protected $_currency_attributes = array(
-        'base_subtotal',
-        'base_row_total',
-        'quote_item_price',
-        'quote_item_row_total',
-    );
+    protected $_currency_attributes
+        = [
+            'base_subtotal',
+            'base_row_total',
+            'quote_item_price',
+            'quote_item_row_total',
+        ];
 
     protected $_helper;
 
+    /**
+     * @var bool
+     */
+    protected $_isNegativeOperator;
 
     /**
      * Setup helper.
      */
     public function __construct()
     {
+        parent::__construct();
         $this->_helper = Mage::helper('hackathon_promocodemessages');
     }
-
 
     /**
      * Main entry point.
      *
-     * @param $couponCode
+     * @param string $couponCode
      * @param Mage_Sales_Model_Quote $quote
      * @return string
+     * @throws Mage_Core_Exception
      */
     public function validate($couponCode, $quote)
     {
@@ -85,8 +97,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         try {
             /** @var Mage_SalesRule_Model_Coupon $coupon */
             $coupon = Mage::getModel('salesrule/coupon')->load($couponCode, 'code');
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             Mage::logException($e);
 
             return;
@@ -100,12 +111,18 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         /** @var $rule Mage_SalesRule_Model_Rule */
         $rule = Mage::getModel('salesrule/rule')->load($coupon->getRuleId());
 
-        $this->_validateGeneral($rule, $coupon);
+        $msg = $this->_validateGeneral($rule, $coupon);
         if (Mage::getStoreConfigFlag('checkout/promocodemessages/include_conditions')) {
-            $this->_validateConditions($rule);
+            $msg .= $this->_validateConditions($rule);
+        }
+
+        if (Mage::getStoreConfigFlag('checkout/promocodemessages/include_actions')) {
+            $msg .= $this->_validateActions($rule);
+        }
+        if (!empty($msg)) {
+            Mage::throwException($msg);
         }
     }
-
 
     /**
      * Validates conditions in the "Rule Information" tab of sales rule admin.
@@ -113,9 +130,11 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      * @param Mage_SalesRule_Model_Rule $rule
      * @param Mage_SalesRule_Model_Coupon $coupon
      * @return string
+     * @throws Mage_Core_Exception
      */
     protected function _validateGeneral($rule, $coupon)
     {
+        $msg = '';
         if (!$rule->getIsActive()) {
             Mage::throwException($this->_formatMessage('Your coupon is inactive.'));
         }
@@ -124,26 +143,26 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $websiteIds = $rule->getWebsiteIds();
         if (!in_array($this->_getQuote()->getStore()->getWebsiteId(), $websiteIds)) {
             $websiteNames = Mage::getResourceModel('core/website_collection')
-                ->addFieldToFilter('website_id', array('in' => $websiteIds))
+                ->addFieldToFilter('website_id', ['in' => $websiteIds])
                 ->getColumnValues('name');
-            Mage::throwException($this->_formatMessage(
+            $msg .= $this->_formatMessage(
                 'Your coupon is not valid for this store.',
                 implode(', ', $websiteNames),
                 'Allowed Websites: %s.'
-            ));
+            );
         }
 
         // check customer groups
         $groupIds = $rule->getCustomerGroupIds();
         if (!in_array($this->_getQuote()->getCustomerGroupId(), $groupIds)) {
             $customerGroupNames = Mage::getResourceModel('customer/group_collection')
-                ->addFieldToFilter('customer_group_id', array('in' => $groupIds))
+                ->addFieldToFilter('customer_group_id', ['in' => $groupIds])
                 ->getColumnValues('customer_group_code');
-            Mage::throwException($this->_formatMessage(
+            $msg .= $this->_formatMessage(
                 'Your coupon is not valid for your Customer Group.',
                 implode(', ', $customerGroupNames),
                 'Allowed Customer Groups: %s.'
-            ));
+            );
         }
 
         // check dates
@@ -153,11 +172,10 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($rule->getFromDate()) {
             $fromDate = new Zend_Date($rule->getFromDate(), Varien_Date::DATE_INTERNAL_FORMAT);
             if ($now->isEarlier($fromDate, Zend_Date::DATE_MEDIUM)) {
-                Mage::throwException($this->_formatMessage(
+                $msg .= $this->_formatMessage(
                     'Your coupon is not valid yet. It will be active on %s.',
-                    Mage::helper('core')->formatDate($fromDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG),
-                    ''
-                ));
+                    Mage::helper('core')->formatDate($fromDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG)
+                );
             }
         }
 
@@ -165,11 +183,10 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($rule->getToDate()) {
             $toDate = new Zend_Date($rule->getToDate(), Varien_Date::DATE_INTERNAL_FORMAT);
             if ($now->isLater($toDate, Zend_Date::DATE_MEDIUM)) {
-                Mage::throwException($this->_formatMessage(
+                $msg .= $this->_formatMessage(
                     'Your coupon is no longer valid. It expired on %s.',
-                    Mage::helper('core')->formatDate($toDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG),
-                    ''
-                ));
+                    Mage::helper('core')->formatDate($toDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG)
+                );
             }
         }
 
@@ -177,75 +194,110 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $isCouponAlreadyUsed = $coupon->getUsageLimit() && $coupon->getTimesUsed() >= $coupon->getUsageLimit();
         if ($coupon->getdata('magemail_expired_at') && $isCouponAlreadyUsed) {
             $expirationDate = Mage::getSingleton('core/date')->date('M d, Y', $coupon->getdata('magemail_expired_at'));
-            Mage::throwException($this->_formatMessage(
+            $msg .= $this->_formatMessage(
                 'Your coupon is no longer valid. It expired on %s.',
                 $expirationDate
-            ));
+            );
         }
 
         // check global usage limit
         if ($coupon->getUsageLimit() && $coupon->getTimesUsed() >= $coupon->getUsageLimit()) {
-            Mage::throwException($this->_formatMessage(
+            $msg .= $this->_formatMessage(
                 'Your coupon was already used.',
                 $coupon->getUsageLimit(),
                 'It may only be used %s time(s).'
-            ));
+            );
         }
         // check per customer usage limit
         $customerId = $this->_getQuote()->getCustomerId();
         if ($customerId && $coupon->getUsagePerCustomer()) {
             $couponUsage = new Varien_Object();
             Mage::getResourceModel('salesrule/coupon_usage')->loadByCustomerCoupon(
-                $couponUsage, $customerId, $coupon->getId());
-            if ($couponUsage->getCouponId() &&
-                $couponUsage->getTimesUsed() >= $coupon->getUsagePerCustomer()
+                $couponUsage,
+                $customerId,
+                $coupon->getId());
+            if ($couponUsage->getCouponId()
+                && $couponUsage->getTimesUsed() >= $coupon->getUsagePerCustomer()
             ) {
-                Mage::throwException($this->_formatMessage(
+                $msg .= $this->_formatMessage(
                     'You have already used your coupon.',
                     $coupon->getUsagePerCustomer(),
                     'It may only be used %s time(s).'
-                ));
+                );
             }
         }
 
         // check per rule usage limit
         $ruleId = $rule->getId();
         if ($ruleId && $rule->getUsesPerCustomer()) {
-            $ruleCustomer   = Mage::getModel('salesrule/rule_customer');
+            $ruleCustomer = Mage::getModel('salesrule/rule_customer');
             $ruleCustomer->loadByCustomerRule($customerId, $ruleId);
             if ($ruleCustomer->getId()) {
                 if ($ruleCustomer->getTimesUsed() >= $rule->getUsesPerCustomer()) {
-                    Mage::throwException($this->_formatMessage(
+                    $msg .= $this->_formatMessage(
                         'You have already used your coupon.',
                         $rule->getUsesPerCustomer(),
                         'It may only be used %s time(s).'
-                    ));
+                    );
                 }
             }
         }
-    }
 
+        return $msg;
+    }
 
     /**
      * Validate conditions in the "Conditions" tab of sales rule admin.
      *
      * @param Mage_SalesRule_Model_Rule $rule
      * @return string
+     * @throws Mage_Core_Exception
      */
     protected function _validateConditions($rule)
     {
         $conditions = $this->_getConditions($rule);
-        $msgs = array();
+        $msgs = [];
 
         foreach ($conditions as $condition) {
             $msgs = array_merge($msgs, $this->_processCondition($condition));
         }
         if (count($msgs) > 0) {
             $errorMsgs = $this->_multiImplode('', $msgs);
-            Mage::throwException($this->_formatMessage($errorMsgs));
+
+            return $this->_formatMessage($errorMsgs);
         }
     }
 
+    /**
+     * Validate conditions in the "Actions" tab of sales rule admin.
+     * Doesn't work if the cart rule also has standard conditions.
+     *
+     * @param Mage_SalesRule_Model_Rule $rule
+     * @return string
+     * @throws Mage_Core_Exception
+     */
+    protected function _validateActions($rule)
+    {
+        $conditions = $this->_getActions($rule);
+        $msgs = [];
+
+        foreach ($conditions as $condition) {
+            $msgs = array_merge($msgs, $this->_processCondition($condition));
+        }
+        if (count($msgs) > 0) {
+
+            $newMsgs = [];
+            // TODO: change the wording?
+            $headingMsg = sprintf('<li class="promo_error_heading">%s<ul>',
+                $this->_helper->__('Error applying rule to a particular cart item:'));
+            $newMsgs[] = $headingMsg;
+            $newMsgs[] = $msgs;
+            $newMsgs[] = '</ul></li>';
+            $errorMsgs = $this->_multiImplode('', $newMsgs);
+
+            return $this->_formatMessage($errorMsgs);
+        }
+    }
 
     /**
      * Process a single condition. The given condition may have subconditions, so function is recursive until it's
@@ -253,11 +305,13 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      *
      * @param array $condition
      * @return array
+     * @throws Mage_Core_Exception
      */
-    protected function _processCondition($condition = array())
+    protected function _processCondition($condition = [], $isNotFoundOperator = false)
     {
-        $msgs = array();
-        $msg = $this->_processRule($condition);
+        $msgs = [];
+        // TODO: we need to get a heading for aggregate here
+        $msg = $this->_processRule($condition, $isNotFoundOperator);
         if (!is_null($msg)) {
             $msgs[] = $msg;
         }
@@ -267,10 +321,15 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $headingMsg = sprintf('<li class="promo_error_heading">%s<ul>',
                 $this->_createAggregatedHeading($condition['aggregator']));
             $msgs[] = $headingMsg;
-            $subMsgs = array();
+            $subMsgs = [];
+            $isNotFoundOperator = false;
+            if ($condition['type'] == 'salesrule/rule_condition_product_found' &&
+                $condition['value'] == '0') {
+                $isNotFoundOperator = true;
+            }
             $subConditions = $condition['conditions'];
             foreach ($subConditions as $subCondition) {
-                $subMsgs[] = $this->_processCondition($subCondition);
+                $subMsgs[] = $this->_processCondition($subCondition, $isNotFoundOperator);
             }
             $msgs[] = $subMsgs;
             $msgs[] = '</ul></li>';
@@ -279,20 +338,18 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         return $msgs;
     }
 
-
     /**
      * Gets details from the given rule condition and matches against operator.
-     *
      * TODO: cleanup a bit
      *
      * @param array $condition
      * @return String containing error message
      * @throws Mage_Core_Exception
      */
-    protected function _processRule($condition = array())
+    protected function _processRule($condition = [], $isNegativeOperator = false)
     {
         $attribute = $condition['attribute'];
-        if (is_null($attribute)) { // product
+        if (is_null($attribute)) {
             return null;
         }
         $operator = $condition['operator'];
@@ -308,7 +365,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
             // get collection and filter by cat ids
             $catCollection = Mage::getModel('catalog/category')->getCollection();
-            $catCollection->addAttributeToFilter('entity_id', array('in' => $categoryIds));
+            $catCollection->addAttributeToFilter('entity_id', ['in' => $categoryIds]);
             $catCollection->addAttributeToSelect('name');
 
             $categories = $catCollection->load()->getColumnValues('name');
@@ -332,7 +389,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 $collection = Mage::getResourceModel('eav/entity_attribute_option_collection')
                     ->setAttributeFilter($attributeId)
                     ->setStoreFilter($storeId, false)
-                    ->addFieldToFilter('tsv.option_id', array('in' => $value));
+                    ->addFieldToFilter('tsv.option_id', ['in' => $value]);
                 $collection
                     ->getSelect()
                     ->limit(1);
@@ -344,13 +401,14 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         }
 
         // Loop through operators looking for a match
-        foreach ($this->_getOperators() as $operatorCode => $operatorText) {
+        $operators = $isNegativeOperator ? $this->_getNotFoundOperators() : $this->_getFoundOperators();
+        foreach ($operators as $operatorCode => $operatorText) {
             if ($operatorCode == $operator) {
                 // get the rule attributes and their values
                 $attributeOptions = $ruleType->getAttributeOption();
                 foreach ($attributeOptions as $attributeOptionCode => $attributeOptionText) {
                     if ($attribute == $attributeOptionCode) {
-                        $value = $isCurrency ? Mage::helper('core')->currency($value, true, false) : $value;
+                        $value = $this->getAttributeDisplayValue($attribute, $value, $isCurrency);
                         $msg = sprintf('%s %s <em>%s</em>.', $attributeOptionText, $operatorText, $value);
                         break;
                     }
@@ -361,7 +419,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         return $msg ? '<li class="promo_error_item">' . $msg . '</li>' : null;
     }
-
 
     /**
      * Setup a heading for aggregated rule conditions.
@@ -374,15 +431,13 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($aggregator == 'any') {
             $heading = sprintf('%s',
                 $this->_helper->__('At least one of the following conditions must be met:'));
-        }
-        else {
+        } else {
             $heading = sprintf('%s',
                 $this->_helper->__('All of the following conditions must be met:'));
         }
 
         return $heading;
     }
-
 
     /**
      * Tranlsate the message.
@@ -397,8 +452,8 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $message = sprintf('<ul class="promo_error_message">%s</ul>',
             $this->_helper->__($message, $params));
 
-        if (!is_null($internalMessage) &&
-            Mage::getStoreConfigFlag('checkout/promocodemessages/add_additional_info_on_frontend')
+        if (!is_null($internalMessage)
+            && Mage::getStoreConfigFlag('checkout/promocodemessages/add_additional_info_on_frontend')
         ) {
             $message .= sprintf('<ul class="promo_error_additional">%s</ul>',
                 $this->_helper->__($internalMessage, $params));
@@ -406,7 +461,6 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         return $message;
     }
-
 
     /**
      * Implode a multidimensional array.
@@ -422,15 +476,13 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         foreach ($array as $item) {
             if (is_array($item)) {
                 $ret .= $this->_multiImplode($glue, $item) . $glue;
-            }
-            else {
+            } else {
                 $ret .= $item . $glue;
             }
         }
 
         return $ret;
     }
-
 
     /**
      * @return Mage_Sales_Model_Quote
@@ -440,18 +492,18 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         return $this->_quote;
     }
 
-
     /**
      * Unserialize the conditions from the rule.
      *
      * @param Mage_SalesRule_Model_Rule $rule
-     * @return Array of rule conditions
+     * @return array Array of rule conditions
      */
     protected function _getConditions($rule)
     {
         if (count($this->_conditions) == 0) {
             if ($rule->getId()) {
                 $data = unserialize($rule->getData('conditions_serialized'));
+                //$this->_conditions = $data;
                 if (isset($data['conditions'])) {
                     $this->_conditions = $data['conditions'];
                 }
@@ -461,17 +513,35 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         return $this->_conditions;
     }
 
+    /**
+     * Unserialize the actions from the rule.
+     *
+     * @param $rule
+     * @return array
+     */
+    protected function _getActions($rule)
+    {
+        if (count($this->_actions) == 0) {
+            if ($rule->getId()) {
+                $data = unserialize($rule->getData('actions_serialized'));
+                if (isset($data['conditions'])) {
+                    $this->_actions = $data['conditions'];
+                }
+            }
+        }
+
+        return $this->_actions;
+    }
 
     /**
-     * Default operator options getter
-     * Provides all possible operator options
+     * Operator options getter for 'found' conditions.
      *
      * @return array
      */
-    protected function _getOperators()
+    protected function _getFoundOperators()
     {
-        if (null === $this->_operators) {
-            $this->_operators = array(
+        if (null === $this->_foundOperators) {
+            $this->_foundOperators = [
                 '==' => $this->_helper->__('must be'),
                 '!=' => $this->_helper->__('must not be'),
                 '>=' => $this->_helper->__('must be equal or greater than'),
@@ -482,9 +552,72 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
                 '!{}' => $this->_helper->__('must not contain'),
                 '()' => $this->_helper->__('must be one of'),
                 '!()' => $this->_helper->__('must not be one of')
-            );
+            ];
         }
 
-        return $this->_operators;
+        return $this->_foundOperators;
+    }
+
+    /**
+     * Operator options getter for 'not found' conditions.
+     * @return array|null
+     */
+    protected function _getNotFoundOperators()
+    {
+        if (null === $this->_notFoundOperators) {
+            $this->_notFoundOperators = [
+                '==' => $this->_helper->__('cannot be'),
+                '!=' => $this->_helper->__('must be'),
+                '>=' => $this->_helper->__('cannot be equal or greater than'),
+                '<=' => $this->_helper->__('cannot be equal or less than'),
+                '>' => $this->_helper->__('cannot be greater than'),
+                '<' => $this->_helper->__('cannot be less than'),
+                '{}' => $this->_helper->__('cannot contain'),
+                '!{}' => $this->_helper->__('must contain'),
+                '()' => $this->_helper->__('cannot be one of'),
+                '!()' => $this->_helper->__('must be one of')
+            ];
+        }
+
+        return $this->_notFoundOperators;
+    }
+
+    /**
+     * Look up attributes that use codes/IDs.
+     *
+     * @param string $attribute Attribute code
+     * @param string $value Attribute value
+     * @param bool $isCurrency
+     * @return mixed|string
+     */
+    protected function getAttributeDisplayValue($attribute, $value, $isCurrency)
+    {
+        switch ($attribute) {
+            case 'payment_method':
+                $paymentMethod = Mage::helper('payment')->getMethodInstance($value);
+                if ($paymentMethod) {
+                    $value = $paymentMethod->getTitle();
+                }
+                break;
+            case 'shipping_method':
+                // TODO: find out how promo rule admin gets shipping methods/rates
+                Mage::dispatchEvent('hackathon_promocode_error_messages_shipmethod', ['value' => $value]);
+                break;
+
+            case 'region_id':
+                $region = Mage::getModel('directory/region')->load($value);
+                $value = $region->getName();
+                break;
+
+            case 'country_id':
+                $country = Mage::getModel('directory/country')->loadByCode($value);
+                $value = $country->getName();
+                break;
+
+            default:
+                $value = $isCurrency ? Mage::helper('core')->currency($value, true, false) : $value;
+        }
+
+        return $value;
     }
 }
