@@ -144,7 +144,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $websiteNames = Mage::getResourceModel('core/website_collection')
                 ->addFieldToFilter('website_id', ['in' => $websiteIds])
                 ->getColumnValues('name');
-            $msg          .= $this->_formatMessageWithContainer(
+            $msg          = $this->_formatMessageWithContainer(
                 'Your coupon is not valid for this store.',
                 implode(', ', $websiteNames),
                 'Allowed Websites: %s.'
@@ -158,7 +158,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $customerGroupNames = Mage::getResourceModel('customer/group_collection')
                 ->addFieldToFilter('customer_group_id', ['in' => $groupIds])
                 ->getColumnValues('customer_group_code');
-            $msg                .= $this->_formatMessageWithContainer(
+            $msg                = $this->_formatMessageWithContainer(
                 'Your coupon is not valid for your Customer Group.',
                 implode(', ', $customerGroupNames),
                 'Allowed Customer Groups: %s.'
@@ -173,7 +173,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($rule->getFromDate()) {
             $fromDate = new Zend_Date($rule->getFromDate(), Varien_Date::DATE_INTERNAL_FORMAT);
             if ($now->isEarlier($fromDate, Zend_Date::DATE_MEDIUM)) {
-                $msg .= $this->_formatMessageWithContainer(
+                $msg = $this->_formatMessageWithContainer(
                     'Your coupon is not valid yet. It will be active on %s.',
                     Mage::helper('core')->formatDate($fromDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG)
                 );
@@ -185,7 +185,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($rule->getToDate()) {
             $toDate = new Zend_Date($rule->getToDate(), Varien_Date::DATE_INTERNAL_FORMAT);
             if ($now->isLater($toDate, Zend_Date::DATE_MEDIUM)) {
-                $msg .= $this->_formatMessageWithContainer(
+                $msg = $this->_formatMessageWithContainer(
                     'Your coupon is no longer valid. It expired on %s.',
                     Mage::helper('core')->formatDate($toDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG)
                 );
@@ -197,7 +197,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         $isCouponAlreadyUsed = $coupon->getUsageLimit() && $coupon->getTimesUsed() >= $coupon->getUsageLimit();
         if ($isCouponAlreadyUsed && $coupon->getData('magemail_expired_at')) {
             $mageMailToDate = new Zend_Date($coupon->getData('magemail_expired_at'), Varien_Date::DATE_INTERNAL_FORMAT);
-            $msg            .= $this->_formatMessageWithContainer(
+            $msg            = $this->_formatMessageWithContainer(
                 'Your coupon is no longer valid. It expired on %s.',
                 Mage::helper('core')->formatDate($mageMailToDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG)
             );
@@ -206,7 +206,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         // check global usage limit
         if ($coupon->getUsageLimit() && $coupon->getTimesUsed() >= $coupon->getUsageLimit()) {
-            $msg .= $this->_formatMessageWithContainer(
+            $msg = $this->_formatMessageWithContainer(
                 'Your coupon was already used.',
                 $coupon->getUsageLimit(),
                 'It may only be used %s time(s).'
@@ -225,7 +225,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             if ($couponUsage->getCouponId()
                 && $couponUsage->getTimesUsed() >= $coupon->getUsagePerCustomer()
             ) {
-                $msg .= $this->_formatMessageWithContainer(
+                $msg = $this->_formatMessageWithContainer(
                     'You have already used your coupon.',
                     $coupon->getUsagePerCustomer(),
                     'It may only be used %s time(s).'
@@ -240,7 +240,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $ruleCustomer = Mage::getModel('salesrule/rule_customer');
             $ruleCustomer->loadByCustomerRule($customerId, $ruleId);
             if ($ruleCustomer->getId() && $ruleCustomer->getTimesUsed() >= $rule->getUsesPerCustomer()) {
-                $msg .= $this->_formatMessageWithContainer(
+                $msg = $this->_formatMessageWithContainer(
                     'You have already used your coupon.',
                     $rule->getUsesPerCustomer(),
                     'It may only be used %s time(s).'
