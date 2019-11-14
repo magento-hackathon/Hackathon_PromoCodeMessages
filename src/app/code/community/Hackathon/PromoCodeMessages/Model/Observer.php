@@ -40,13 +40,20 @@ class Hackathon_PromoCodeMessages_Model_Observer
                     return;
                 }
 
-                $quote = $observer->getQuote();
+                $quote      = $observer->getQuote();
                 $couponCode = $quote->getCouponCode();
 
                 if (!$couponCode || $couponCode == '') {
                     // parent validation has failed
                     $couponCode = (string)Mage::app()->getRequest()->getParam('coupon_code');
-                    Mage::getModel('hackathon_promocodemessages/validator')->validate($couponCode, $quote);
+                    try {
+                        Mage::getModel('hackathon_promocodemessages/validator')->validate($couponCode, $quote);
+                    } catch (Mage_Core_Exception $e) {
+                        $msg = Mage::helper('hackathon_promocodemessages')->__('Your coupon could not be redeemed.');
+                        $msg = "<p class=\"promo_error_intro\">$msg</p>";
+                        $msg .= $e->getMessage();
+                        throw new Mage_Core_Exception($msg, 0, $e);
+                    }
                 }
             }
         }
