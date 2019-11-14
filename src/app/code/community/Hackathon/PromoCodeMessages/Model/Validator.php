@@ -105,7 +105,7 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
 
         // no coupon
         if (!$coupon->getId()) {
-            Mage::throwException($this->_formatMessage('Coupon code does not exist.'));
+            Mage::throwException($this->_formatMessageWithContainer('Coupon code does not exist.'));
         }
 
         /** @var $rule Mage_SalesRule_Model_Rule */
@@ -134,22 +134,22 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
      */
     protected function _validateGeneral($rule, $coupon)
     {
-        $msg = '';
         if (!$rule->getIsActive()) {
-            Mage::throwException($this->_formatMessage('Your coupon is inactive.'));
+            Mage::throwException($this->_formatMessageWithContainer('Your coupon is inactive.'));
         }
 
         // check websites
         $websiteIds = $rule->getWebsiteIds();
-        if (!in_array($this->_getQuote()->getStore()->getWebsiteId(), $websiteIds)) {
+        if (!in_array($this->_getQuote()->getStore()->getWebsiteId(), $websiteIds, false)) {
             $websiteNames = Mage::getResourceModel('core/website_collection')
                 ->addFieldToFilter('website_id', ['in' => $websiteIds])
                 ->getColumnValues('name');
-            $msg .= $this->_formatMessage(
+            $msg          .= $this->_formatMessageWithContainer(
                 'Your coupon is not valid for this store.',
                 implode(', ', $websiteNames),
                 'Allowed Websites: %s.'
             );
+            Mage::throwException($msg);
         }
 
         // check customer groups
@@ -158,11 +158,12 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             $customerGroupNames = Mage::getResourceModel('customer/group_collection')
                 ->addFieldToFilter('customer_group_id', ['in' => $groupIds])
                 ->getColumnValues('customer_group_code');
-            $msg .= $this->_formatMessage(
+            $msg                .= $this->_formatMessageWithContainer(
                 'Your coupon is not valid for your Customer Group.',
                 implode(', ', $customerGroupNames),
                 'Allowed Customer Groups: %s.'
             );
+            Mage::throwException($msg);
         }
 
         // check dates
@@ -172,10 +173,11 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($rule->getFromDate()) {
             $fromDate = new Zend_Date($rule->getFromDate(), Varien_Date::DATE_INTERNAL_FORMAT);
             if ($now->isEarlier($fromDate, Zend_Date::DATE_MEDIUM)) {
-                $msg .= $this->_formatMessage(
+                $msg .= $this->_formatMessageWithContainer(
                     'Your coupon is not valid yet. It will be active on %s.',
                     Mage::helper('core')->formatDate($fromDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG)
                 );
+                Mage::throwException($msg);
             }
         }
 
@@ -183,30 +185,33 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($rule->getToDate()) {
             $toDate = new Zend_Date($rule->getToDate(), Varien_Date::DATE_INTERNAL_FORMAT);
             if ($now->isLater($toDate, Zend_Date::DATE_MEDIUM)) {
-                $msg .= $this->_formatMessage(
+                $msg .= $this->_formatMessageWithContainer(
                     'Your coupon is no longer valid. It expired on %s.',
                     Mage::helper('core')->formatDate($toDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG)
                 );
+                Mage::throwException($msg);
             }
         }
 
         // magemail coupon-level auto-expiration date
         $isCouponAlreadyUsed = $coupon->getUsageLimit() && $coupon->getTimesUsed() >= $coupon->getUsageLimit();
-        if ($coupon->getdata('magemail_expired_at') && $isCouponAlreadyUsed) {
-            $expirationDate = Mage::getSingleton('core/date')->date('M d, Y', $coupon->getdata('magemail_expired_at'));
-            $msg .= $this->_formatMessage(
+        if ($isCouponAlreadyUsed && $coupon->getData('magemail_expired_at')) {
+            $mageMailToDate = new Zend_Date($coupon->getData('magemail_expired_at'), Varien_Date::DATE_INTERNAL_FORMAT);
+            $msg            .= $this->_formatMessageWithContainer(
                 'Your coupon is no longer valid. It expired on %s.',
-                $expirationDate
+                Mage::helper('core')->formatDate($mageMailToDate, Mage_Core_Model_Locale::FORMAT_TYPE_LONG)
             );
+            Mage::throwException($msg);
         }
 
         // check global usage limit
         if ($coupon->getUsageLimit() && $coupon->getTimesUsed() >= $coupon->getUsageLimit()) {
-            $msg .= $this->_formatMessage(
+            $msg .= $this->_formatMessageWithContainer(
                 'Your coupon was already used.',
                 $coupon->getUsageLimit(),
                 'It may only be used %s time(s).'
             );
+            Mage::throwException($msg);
         }
         // check per customer usage limit
         $customerId = $this->_getQuote()->getCustomerId();
@@ -215,15 +220,17 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             Mage::getResourceModel('salesrule/coupon_usage')->loadByCustomerCoupon(
                 $couponUsage,
                 $customerId,
-                $coupon->getId());
+                $coupon->getId()
+            );
             if ($couponUsage->getCouponId()
                 && $couponUsage->getTimesUsed() >= $coupon->getUsagePerCustomer()
             ) {
-                $msg .= $this->_formatMessage(
+                $msg .= $this->_formatMessageWithContainer(
                     'You have already used your coupon.',
                     $coupon->getUsagePerCustomer(),
                     'It may only be used %s time(s).'
                 );
+                Mage::throwException($msg);
             }
         }
 
@@ -232,18 +239,15 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if ($ruleId && $rule->getUsesPerCustomer()) {
             $ruleCustomer = Mage::getModel('salesrule/rule_customer');
             $ruleCustomer->loadByCustomerRule($customerId, $ruleId);
-            if ($ruleCustomer->getId()) {
-                if ($ruleCustomer->getTimesUsed() >= $rule->getUsesPerCustomer()) {
-                    $msg .= $this->_formatMessage(
-                        'You have already used your coupon.',
-                        $rule->getUsesPerCustomer(),
-                        'It may only be used %s time(s).'
-                    );
-                }
+            if ($ruleCustomer->getId() && $ruleCustomer->getTimesUsed() >= $rule->getUsesPerCustomer()) {
+                $msg .= $this->_formatMessageWithContainer(
+                    'You have already used your coupon.',
+                    $rule->getUsesPerCustomer(),
+                    'It may only be used %s time(s).'
+                );
+                Mage::throwException($msg);
             }
         }
-
-        return $msg;
     }
 
     /**
@@ -463,6 +467,25 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
     }
 
     /**
+     * Wrap the message in a li
+     *
+     * @param string $message
+     * @param string $params
+     * @param string $internalMessage
+     *
+     * @return string containing entire error message
+     */
+    protected function _formatMessageWithContainer($message, $params = '', $internalMessage = null)
+    {
+        if (!$message) {
+            return '';
+        }
+        $message = '<li class="promo_error_item">' . $this->_helper->__($message, $params) . '</li>';
+
+        return $this->_formatMessage($message, $params, $internalMessage);
+    }
+
+    /**
      * Implode a multidimensional array.
      *
      * @param $glue
@@ -612,6 +635,10 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
             case 'country_id':
                 $country = Mage::getModel('directory/country')->loadByCode($value);
                 $value = $country->getName();
+                break;
+            case 'attribute_set_id':
+                $attributeSet = Mage::getModel('eav/entity_attribute_set')->load($value);
+                $value        = $attributeSet->getAttributeSetName();
                 break;
 
             default:
