@@ -85,7 +85,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
     {
         $couponCode = 'sdfsdf';
         $this->expectException(Mage_Core_Exception::class);
-        $this->expectExceptionMessage('<ul class="promo_error_message">Coupon code does not exist.</ul>');
+        $this->expectExceptionMessage('<ul class="promo_error_message"><li class="promo_error_item">Coupon code does not exist.</li></ul>');
         $this->validator->validate($couponCode, $this->quoteMock);
     }
 
@@ -96,7 +96,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(400);
 
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid for this store.</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon is not valid for this store.</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
 
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
@@ -110,8 +110,8 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(400);
 
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid for this store.</ul>'
-            . '<ul class="promo_error_additional">Allowed Websites: Main Website.</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon is not valid for this store.</li></ul>'
+            . '<ul class="promo_error_additional"><li class="promo_error_item">Allowed Websites: Main Website.</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
@@ -123,7 +123,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(0);
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid for your Customer Group.</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon is not valid for your Customer Group.</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
@@ -136,8 +136,8 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(0);
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid for your Customer '
-            . 'Group.</ul><ul class="promo_error_additional">Allowed Customer Groups: General.</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon is not valid for your Customer '
+            . 'Group.</li></ul><ul class="promo_error_additional"><li class="promo_error_item">Allowed Customer Groups: General.</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
@@ -146,7 +146,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
     {
         $this->rule = $this->ruleMother->generateInactiveRule();
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon is inactive.</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon is inactive.</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
@@ -158,8 +158,8 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon is no longer valid. It expired on '
-            . 'January 1, 2010.</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon is no longer valid. It expired on '
+            . 'January 1, 2010.</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
@@ -171,8 +171,8 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon is not valid yet. It will be active '
-            . 'on January 1, 2030.</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon is not valid yet. It will be active '
+            . 'on January 1, 2030.</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
@@ -184,7 +184,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon was already used.</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon was already used.</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
@@ -197,8 +197,8 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon was already used.</ul>'
-            . '<ul class="promo_error_additional">It may only be used 1 time(s).</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon was already used.</li></ul>'
+            . '<ul class="promo_error_additional"><li class="promo_error_item">It may only be used 1 time(s).</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
@@ -210,7 +210,7 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon was already used.</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon was already used.</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
@@ -223,8 +223,8 @@ class Hackathon_PromoCodeMessages_Model_ValidatorTest extends PHPUnit_Framework_
         $this->storeMock->expects($this->once())->method('getWebsiteId')->willReturn(1);
         $this->quoteMock->expects($this->once())->method('getCustomerGroupId')->willReturn(1);
         $this->expectException(Mage_Core_Exception::class);
-        $exceptionMsg = '<ul class="promo_error_message">Your coupon was already used.</ul>'
-            . '<ul class="promo_error_additional">It may only be used 1 time(s).</ul>';
+        $exceptionMsg = '<ul class="promo_error_message"><li class="promo_error_item">Your coupon was already used.</li></ul>'
+            . '<ul class="promo_error_additional"><li class="promo_error_item">It may only be used 1 time(s).</li></ul>';
         $this->expectExceptionMessage($exceptionMsg);
         $this->validator->validate($this->rule->getCouponCode(), $this->quoteMock);
     }
