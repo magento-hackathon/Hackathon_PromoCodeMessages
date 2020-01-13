@@ -480,7 +480,9 @@ class Hackathon_PromoCodeMessages_Model_Validator extends Mage_Core_Model_Abstra
         if (!$message) {
             return '';
         }
+
         $message = '<li class="promo_error_item">' . $this->_helper->__($message, $params) . '</li>';
+        $internalMessage = '<li class="promo_error_item">' . $this->_helper->__($internalMessage, $params) . '</li>';
 
         return $this->_formatMessage($message, $params, $internalMessage);
     }
