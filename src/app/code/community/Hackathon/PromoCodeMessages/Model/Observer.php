@@ -23,7 +23,6 @@
 
 class Hackathon_PromoCodeMessages_Model_Observer
 {
-
     /**
      * Called on sales_quote_collect_totals_after. Ensure that the action is couponPost before continuing.
      *
@@ -31,23 +30,32 @@ class Hackathon_PromoCodeMessages_Model_Observer
      */
     public function validateCode(Varien_Event_Observer $observer)
     {
-        if (Mage::getStoreConfigFlag('checkout/promocodemessages/enabled')) {
-            $action = Mage::app()->getRequest()->getActionName();
+        if (!Mage::getStoreConfigFlag('checkout/promocodemessages/enabled')) {
+            return;
+        }
 
-            if ($action == 'couponPost') {
+        if (Mage::app()->getRequest()->getActionName() !== 'couponPost') {
+            return;
+        }
 
-                if (Mage::app()->getRequest()->getParam('remove') == 1) {
-                    return;
-                }
+        if ((int)Mage::app()->getRequest()->getParam('remove') === 1) {
+            return;
+        }
 
-                $quote = $observer->getQuote();
-                $couponCode = $quote->getCouponCode();
+        $quote      = $observer->getQuote();
+        $couponCode = $quote->getCouponCode();
 
-                if (!$couponCode || $couponCode == '') {
-                    // parent validation has failed
-                    $couponCode = (string)Mage::app()->getRequest()->getParam('coupon_code');
-                    Mage::getModel('hackathon_promocodemessages/validator')->validate($couponCode, $quote);
-                }
+        if (!$couponCode) {
+            // parent validation has failed
+            $couponCode = (string)Mage::app()->getRequest()->getParam('coupon_code');
+            try {
+                Mage::getModel('hackathon_promocodemessages/validator')->validate($couponCode, $quote);
+            } catch (Mage_Core_Exception $e) {
+                $msg = Mage::helper('hackathon_promocodemessages')
+                    ->__('Your coupon "%s" could not be redeemed.', $couponCode);
+                $msg = "<p class=\"promo_error_intro\">$msg</p>";
+                $msg .= $e->getMessage();
+                throw new Mage_Core_Exception($msg, 0, $e);
             }
         }
     }
