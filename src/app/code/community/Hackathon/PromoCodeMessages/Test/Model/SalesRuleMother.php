@@ -80,10 +80,10 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateAddressConditionSubtotalRule()
+    public function generateAddressConditionSubtotalRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_address',
@@ -97,10 +97,10 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateAddressConditionTotalQtyRule()
+    public function generateAddressConditionTotalQtyRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_address',
@@ -114,10 +114,10 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateAddressConditionWeightRule()
+    public function generateAddressConditionWeightRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_address',
@@ -131,11 +131,11 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateAddressConditionPaymentMethodRule()
+    public function generateAddressConditionPaymentMethodRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_address',
@@ -149,11 +149,11 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateAddressConditionShippingMethodRule()
+    public function generateAddressConditionShippingMethodRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_address',
@@ -167,11 +167,11 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateAddressConditionPostCodeRule()
+    public function generateAddressConditionPostCodeRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_address',
@@ -185,11 +185,11 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateAddressConditionRegionRule()
+    public function generateAddressConditionRegionRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_address',
@@ -203,11 +203,11 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateAddressConditionRegionIdRule()
+    public function generateAddressConditionRegionIdRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_address',
@@ -221,11 +221,11 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateAddressConditionCountryIdRule()
+    public function generateAddressConditionCountryIdRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_address',
@@ -239,13 +239,13 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateProductConditionCategoriesRule()
+    public function generateProductConditionCategoriesRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
         $categoryIds = Mage::getModel('catalog/category')->getCollection()->getAllIds(2);
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_product_found',
@@ -267,11 +267,11 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateFoundProductConditionAttributeRule()
+    public function generateFoundProductConditionAttributeRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_product_found',
@@ -293,11 +293,11 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateNotFoundProductConditionAttributeRule()
+    public function generateNotFoundProductConditionAttributeRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_product_found',
@@ -319,7 +319,7 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateFoundActionAttributeRule()
+    public function generateFoundActionAttributeRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
         $actions = [];
@@ -344,11 +344,11 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateNotFoundActionAttributeRule()
+    public function generateNotFoundActionAttributeRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
 
-        $actions = $this->generateRuleConditionCombineArray();
+        $actions = self::generateRuleConditionCombineArray();
         $actions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_product_found',
@@ -370,12 +370,12 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         return $rule;
     }
 
-    public function generateConditionAndActionRule()
+    public function generateConditionAndActionRule(): \Mage_SalesRule_Model_Rule
     {
         $rule = $this->rule;
         $categoryIds = Mage::getModel('catalog/category')->getCollection()->getAllIds(2);
 
-        $conditions = $this->generateRuleConditionCombineArray();
+        $conditions = self::generateRuleConditionCombineArray();
         $conditions['1--1'] =
             [
                 'type' => 'salesrule/rule_condition_product_found',
@@ -421,7 +421,7 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
      *
      * @return Mage_SalesRule_Model_Rule
      */
-    private function setupBaseRule()
+    private function setupBaseRule(): \Mage_SalesRule_Model_Rule
     {
         // SalesRule Rule model
         $rule = Mage::getModel('salesrule/rule');
@@ -463,20 +463,20 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
         $conditions[1] = [
             'type' => 'salesrule/rule_condition_combine',
             'aggregator' => 'all',
-            'value' => "1",
+            'value' => '1',
             'new_child' => ''
         ];
 
         return $conditions;
     }
 
-    private function generateUniqueId($length = null)
+    private function generateUniqueId($length = null): string
     {
-        $rndId = crypt(uniqid(rand(), 1));
+        $rndId = crypt(uniqid(mt_rand(), 1));
         $rndId = strip_tags(stripslashes($rndId));
-        $rndId = str_replace([".", "$"], "", $rndId);
-        $rndId = strrev(str_replace("/", "", $rndId));
-        if (!is_null($rndId)) {
+        $rndId = str_replace(['.', '$'], '', $rndId);
+        $rndId = strrev(str_replace('/', '', $rndId));
+        if ($rndId !== null) {
             return strtoupper(substr($rndId, 0, $length));
         }
 
@@ -486,7 +486,7 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
     /**
      * @return string
      */
-    private function getAllCustomerGroups()
+    private function getAllCustomerGroups(): string
     {
         $customerGroups = Mage::getModel('customer/group')->getCollection()->getAllIds();
 
@@ -496,7 +496,7 @@ class Hackathon_PromoCodeMessages_Model_SalesRuleMother
     /**
      * @return string
      */
-    private function getAllWebsites()
+    private function getAllWebsites(): string
     {
         $websites = Mage::getModel('core/website')->getCollection()->getAllIds();
 
