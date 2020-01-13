@@ -30,3 +30,4 @@
 "Validate cart rule actions","Validate cart rule actions"
 "Provides error messaging for conditions under ""Conditions"" tab","Provides error messaging for conditions under ""Conditions"" tab"
 "Provides error messaging for actions under ""Actions"" tab","Provides error messaging for actions under ""Actions"" tab"
+"Your coupon ""%s"" could not be redeemed.","Your coupon ""%s"" could not be redeemed."
