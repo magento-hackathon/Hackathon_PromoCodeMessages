@@ -12,9 +12,14 @@
     {
       "name": "Andreas von Studnitz",
       "email": "avs@integer-net.de"
+    },
+    {
+      "name": "Fabian Blechschmidt",
+      "email": "blechschmidt@fabian-blechschmidt.de"
     }
   ],
   "require": {
+    "php": "^7.0",
     "magento-hackathon/magento-composer-installer": "*"
   },
   "require-dev": {
